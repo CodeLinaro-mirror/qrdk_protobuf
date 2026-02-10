@@ -6,8 +6,4 @@ module(
     compatibility_level = 1,
 )
 
-bazel_dep(name = "protobuf", repo_name = "com_google_protobuf")
-local_path_override(
-    module_name = "protobuf",
-    path = "../..",
-)
+bazel_dep(name = "protobuf", version = "33.5", repo_name = "com_google_protobuf")
