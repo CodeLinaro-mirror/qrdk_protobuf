@@ -44,8 +44,7 @@ void SetPrimitiveVariables(
     Context* context) {
   SetCommonFieldVariables(descriptor, info, variables);
 
-  (*variables)["empty_list"] =
-      "com.google.protobuf.GeneratedMessageLite.emptyProtobufList()";
+  (*variables)["empty_list"] = "emptyProtobufList()";
 
   (*variables)["default"] =
       ImmutableDefaultValue(descriptor, name_resolver, context->options());
