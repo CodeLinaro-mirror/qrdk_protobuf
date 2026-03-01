@@ -67,7 +67,7 @@ inline void CopyToString(StringType& element, T&& value) {
   // strings, otherwise this would be a subtle place we'd be leaking the
   // `std::string` backing of `string_view` repeated fields. I.e. whatever new
   // backing we use for `string_view` fields would have to support all
-  // `operator=` that `std::string` has.
+  // `operator=` overloads that `std::string` has.
   //
   // With an explicit list, we no longer have this dependency.
   if constexpr (std::is_convertible_v<T, absl::string_view>) {
@@ -122,6 +122,8 @@ struct RepeatedFieldTraits {
   using type = RepeatedField<ElementType>;
   using const_reference = ElementType;
   using reference = ElementType;
+  using const_iterator = typename type::const_iterator;
+  using iterator = typename type::iterator;
 };
 
 // Specialization for message types.
@@ -133,6 +135,8 @@ struct RepeatedFieldTraits<
   using type = RepeatedPtrField<ElementType>;
   using const_reference = const ElementType&;
   using reference = ElementType&;
+  using const_iterator = typename type::const_iterator;
+  using iterator = typename type::iterator;
 };
 
 // Explicit specializations for string types.
@@ -141,6 +145,8 @@ struct RepeatedFieldTraits<absl::string_view> {
   using type = RepeatedPtrField<std::string>;
   using const_reference = absl::string_view;
   using reference = absl::string_view;
+  using const_iterator = RepeatedPtrIterator<absl::string_view>;
+  using iterator = RepeatedPtrIterator<absl::string_view>;
 };
 
 template <>
@@ -148,6 +154,8 @@ struct RepeatedFieldTraits<std::string> {
   using type = RepeatedPtrField<std::string>;
   using const_reference = const std::string&;
   using reference = std::string&;
+  using const_iterator = typename type::const_iterator;
+  using iterator = typename type::iterator;
 };
 
 template <>
@@ -155,6 +163,8 @@ struct RepeatedFieldTraits<absl::Cord> {
   using type = RepeatedField<absl::Cord>;
   using const_reference = const absl::Cord&;
   using reference = absl::Cord&;
+  using const_iterator = typename type::const_iterator;
+  using iterator = typename type::iterator;
 };
 
 // The base class for both mutable and const repeated field proxies. Implements
@@ -185,9 +195,9 @@ class RepeatedFieldProxyBase {
   // This is important, as the concrete type of the iterator leaks the
   // underlying container type. With a forbidden spelling, we have the
   // flexibility to change the iterator type without breaking user code.
-  using const_iterator = typename RepeatedFieldType::const_iterator;
-  using iterator = std::conditional_t<kIsConst, const_iterator,
-                                      typename RepeatedFieldType::iterator>;
+  using const_iterator = typename Traits::const_iterator;
+  using iterator =
+      std::conditional_t<kIsConst, const_iterator, typename Traits::iterator>;
   using const_reverse_iterator = std::reverse_iterator<const_iterator>;
   using reverse_iterator = std::reverse_iterator<iterator>;
 
@@ -217,6 +227,17 @@ class RepeatedFieldProxyBase {
   // Returns the number of elements in the repeated field.
   [[nodiscard]] size_type size() const {
     return static_cast<size_type>(field().size());
+  }
+
+  [[nodiscard]] const_iterator cbegin() const { return begin(); }
+  [[nodiscard]] const_iterator cend() const { return end(); }
+  [[nodiscard]] iterator begin() const { return iterator(field().begin()); }
+  [[nodiscard]] iterator end() const { return iterator(field().end()); }
+  [[nodiscard]] reverse_iterator rbegin() const {
+    return reverse_iterator(end());
+  }
+  [[nodiscard]] reverse_iterator rend() const {
+    return reverse_iterator(begin());
   }
 
  protected:
@@ -329,6 +350,57 @@ class RepeatedFieldProxyWithPushBack<
   }
 };
 
+// Defines `emplace_back()` for all types except `absl::string_view`. Simply
+// takes any arguments that can be passed to the constructor of `ElementType`
+// and in-place constructs the element at the end of the repeated field.
+template <typename ElementType, typename Enable = void>
+class RepeatedFieldProxyWithEmplaceBack {
+ public:
+  // In-place constructs an element at the end of the repeated field, returning
+  // a reference to the newly constructed element.
+  template <typename... Args>
+  auto& emplace_back(Args&&... args) const {
+    return ToProxyType(this).Emplace(std::forward<Args>(args)...);
+  }
+};
+
+// Defines `emplace_back()` for `absl::string_view` element types. We explicitly
+// list all constructors we want to support for repeated `string_views` to not
+// leak the `std::string` backing of repeated `string_views`.
+template <typename ElementType>
+class RepeatedFieldProxyWithEmplaceBack<
+    ElementType,
+    std::enable_if_t<std::is_same_v<ElementType, absl::string_view>>> {
+ public:
+  // In-place constructs an element at the end of the repeated field, returning
+  // a string_view of the newly constructed element.
+  absl::string_view emplace_back() const { return ToProxyType(this).Emplace(); }
+
+  // In-place constructs an element at the end of the repeated field, returning
+  // a string_view of the newly constructed element.
+  absl::string_view emplace_back(absl::string_view value) const {
+    return ToProxyType(this).Emplace(value);
+  }
+
+  // In-place constructs an element at the end of the repeated field, returning
+  // a string_view of the newly constructed element.
+  absl::string_view emplace_back(std::string&& value) const {
+    return ToProxyType(this).Emplace(std::move(value));
+  }
+
+  // In-place constructs an element at the end of the repeated field, returning
+  // a string_view of the newly constructed element.
+  absl::string_view emplace_back(const std::string& value) const {
+    return ToProxyType(this).Emplace(value);
+  }
+
+  // In-place constructs an element at the end of the repeated field, returning
+  // a string_view of the newly constructed element.
+  absl::string_view emplace_back(const char* value) const {
+    return ToProxyType(this).Emplace(value);
+  }
+};
+
 }  // namespace internal
 
 // A proxy for a repeated field of type `ElementType` in a Protobuf message.
@@ -346,7 +418,8 @@ template <typename ElementType>
 class PROTOBUF_DECLSPEC_EMPTY_BASES RepeatedFieldProxy final
     : public internal::RepeatedFieldProxyBase<ElementType>,
       public internal::RepeatedFieldProxyWithSet<ElementType>,
-      public internal::RepeatedFieldProxyWithPushBack<ElementType> {
+      public internal::RepeatedFieldProxyWithPushBack<ElementType>,
+      public internal::RepeatedFieldProxyWithEmplaceBack<ElementType> {
   static_assert(!std::is_const_v<ElementType>);
 
  protected:
@@ -372,11 +445,19 @@ class PROTOBUF_DECLSPEC_EMPTY_BASES RepeatedFieldProxy final
     return field()[index];
   }
 
+  // Removes the last element from the repeated field.
+  void pop_back() const { field().RemoveLast(); }
+
+  // Removes all elements from the repeated field. The field will be empty after
+  // this call.
+  void clear() const { field().Clear(); }
+
  private:
   friend RepeatedFieldProxy<const ElementType>;
 
   friend internal::RepeatedFieldProxyWithSet<ElementType, void>;
   friend internal::RepeatedFieldProxyWithPushBack<ElementType, void>;
+  friend internal::RepeatedFieldProxyWithEmplaceBack<ElementType, void>;
 
   template <typename T, typename... Args>
   friend RepeatedFieldProxy<T> internal::ConstructRepeatedFieldProxy(
@@ -396,6 +477,10 @@ class PROTOBUF_DECLSPEC_EMPTY_BASES RepeatedFieldProxy final
   }
   auto& Add(const ElementType& value) const {
     return *field().AddWithArena(arena(), value);
+  }
+  template <typename... Args>
+  auto& Emplace(Args&&... args) const {
+    return *field().EmplaceWithArena(arena(), std::forward<Args>(args)...);
   }
 
   Arena* arena() const { return arena_; }
