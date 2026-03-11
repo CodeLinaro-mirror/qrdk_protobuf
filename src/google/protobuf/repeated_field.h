@@ -1384,7 +1384,12 @@ inline size_t RepeatedField<Element>::SpaceUsedExcludingSelfLong() const {
 // Like C++20's std::erase_if, for RepeatedField
 template <typename T, typename Pred>
 size_t erase_if(RepeatedField<T>& cont, Pred pred) {
+#ifdef PROTOBUF_FUTURE_CONST_REPEATED_FIELD_ERASE_IF_PARAMETER
+  auto it = std::remove_if(cont.begin(), cont.end(),
+                           [&pred](const auto& elem) { return pred(elem); });
+#else
   auto it = std::remove_if(cont.begin(), cont.end(), pred);
+#endif
   const size_t removed = cont.end() - it;
   cont.Truncate(cont.size() - removed);
   return removed;

@@ -133,6 +133,11 @@
 // Owner: ckennelly@, mkruskal@
 #define PROTOBUF_FUTURE_ADD_NODISCARD [[nodiscard]]
 
+// Passes a const reference to the callback for RepeatedField::erase_if, as
+// opposed to a mutable reference.
+// Owner: cknittel@, mkruskal@
+#define PROTOBUF_FUTURE_CONST_REPEATED_FIELD_ERASE_IF_PARAMETER 1
+
 #else
 
 #define PROTOBUF_FUTURE_ADD_NODISCARD
