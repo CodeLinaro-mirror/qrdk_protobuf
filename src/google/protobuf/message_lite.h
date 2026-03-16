@@ -82,6 +82,7 @@ class MessageTableTester;
 }  // namespace compiler
 
 namespace internal {
+struct PrivateAccess;
 
 // TODO: Remove this once we have a better way to do this.
 PROTOBUF_EXPORT void GenericSwap(MessageLite* lhs, MessageLite* rhs);
@@ -665,16 +666,26 @@ struct MessageGlobalsBase {
         reinterpret_cast<const char*>(default_instance) - OffsetToDefault());
   }
 
-  uintptr_t dummy = 0xDEADBEEF;
+  static constexpr const ClassData* GetClassData(const void* globals) {
+    return static_cast<const MessageGlobalsBase*>(globals)->class_data.base();
+  }
+  constexpr const ClassData* GetClassData() const { return class_data.base(); }
+
+  explicit constexpr MessageGlobalsBase(ClassDataFull class_data)
+      : class_data(class_data) {}
+
+  // It also aliases to ClassDataLite.
+  ClassDataFull class_data;
 };
 
-template <const auto* kGlobals, const auto* kClassData>
+template <const auto* kGlobals>
 struct GeneratedMessageTraitsT {
   static const void* default_instance() {
-    return internal::MessageGlobalsBase::ToDefaultInstance<MessageLite>(
-        kGlobals);
+    return MessageGlobalsBase::ToDefaultInstance(kGlobals);
   }
-  static constexpr const auto* class_data() { return kClassData->base(); }
+  static const auto* class_data() {
+    return MessageGlobalsBase::GetClassData(kGlobals);
+  }
   static constexpr auto StrongPointer() { return kGlobals; }
 };
 #endif  // PROTOBUF_MESSAGE_GLOBALS
@@ -1330,6 +1341,7 @@ class PROTOBUF_EXPORT MessageLite {
   friend class internal::WireFormatLite;
   friend class internal::RustMapHelper;
   friend class internal::MessageCreator;
+  friend internal::PrivateAccess;
   friend class internal::RepeatedPtrFieldBase;
   template <typename Type>
   friend class internal::GenericTypeHandler;
