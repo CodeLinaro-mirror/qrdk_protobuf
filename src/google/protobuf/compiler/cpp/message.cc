@@ -1483,6 +1483,8 @@ void MessageGenerator::GenerateMapEntryClassDefinition(io::Printer* p) {
         [&] {
         }},
        {"decl_annotate", [&] { GenerateAnnotationDecl(p); }},
+       {"alias_parse_table_type",
+        [&] { parse_function_generator_->GenerateAliasParseTableType(p); }},
        {"parse_decls",
         [&] { parse_function_generator_->GenerateDataDecls(p); }}},
       R"cc(
@@ -1514,6 +1516,10 @@ void MessageGenerator::GenerateMapEntryClassDefinition(io::Printer* p) {
           friend class $pb$::MessageLite;
           friend struct ::$tablename$;
           friend $globals_type$;
+
+          $alias_parse_table_type$;
+          static constexpr ParseTableT InternalGenerateParseTable_(
+              const $pbi$::ClassData* $nonnull$ class_data);
 
           $parse_decls$;
           $decl_annotate$;
@@ -2137,6 +2143,8 @@ void MessageGenerator::GenerateClassDefinition(io::Printer* p) {
             )cc");
           }
         }},
+       {"alias_parse_table_type",
+        [&] { parse_function_generator_->GenerateAliasParseTableType(p); }},
        {"decl_data", [&] { parse_function_generator_->GenerateDataDecls(p); }},
        {"post_loop_handler",
         [&] {
@@ -2280,6 +2288,9 @@ void MessageGenerator::GenerateClassDefinition(io::Printer* p) {
           //~ without a definition so it is effectively private.
           static constexpr auto InternalGenerateClassData_(
               const MessageLite& prototype);
+          $alias_parse_table_type$;
+          static constexpr ParseTableT InternalGenerateParseTable_(
+              const $pbi$::ClassData* $nonnull$ class_data);
 
           $get_metadata$;
           $decl_split_methods$;
@@ -2420,51 +2431,6 @@ void MessageGenerator::GenerateClassMethods(io::Printer* p) {
               }
             )cc");
   }
-  p->Emit(
-      {{"has_bit",
-        [&] {
-          if (has_bit_indices_.empty()) return;
-          p->Emit(
-              R"cc(
-                using HasBits =
-                    decltype(::std::declval<$classname$>().$has_bits$);
-                static constexpr ::int32_t kHasBitsOffset =
-                    8 * PROTOBUF_FIELD_OFFSET($classname$, _impl_._has_bits_);
-              )cc");
-        }},
-       {"oneof",
-        [&] {
-          if (descriptor_->real_oneof_decl_count() == 0) return;
-          p->Emit(
-              R"cc(
-                static constexpr ::int32_t kOneofCaseOffset =
-                    PROTOBUF_FIELD_OFFSET($classtype$, $oneof_case$);
-              )cc");
-        }},
-       {"required",
-        [&] {
-          if (num_required_fields_ == 0) return;
-          const std::vector<uint32_t> masks_for_has_bits =
-              RequiredFieldsBitMask();
-          p->Emit(
-              {{"check_bit_mask", ConditionalToCheckBitmasks(
-                                      masks_for_has_bits, false, "has_bits")}},
-              R"cc(
-                static bool MissingRequiredFields(const HasBits& has_bits) {
-                  return $check_bit_mask$;
-                }
-              )cc");
-        }}},
-      R"cc(
-        class $classname$::_Internal {
-         public:
-          $has_bit$;
-          $oneof$;
-          $required$;
-        };
-      )cc");
-  p->Emit("\n");
-
   // Generate non-inline field definitions.
   for (auto field : internal::FieldRange(descriptor_)) {
     auto v = p->WithVars(FieldVars(field, options_));
@@ -5541,6 +5507,57 @@ void MessageGenerator::GenerateSourceDefaultInstance(io::Printer* p) {
 
   auto v = p->WithVars(ClassVars(descriptor_, options_));
   auto t = p->WithVars(MakeTrackerCalls(descriptor_, options_));
+
+  if (!IsMapEntryMessage(descriptor_)) {
+    p->Emit(
+        {{"has_bit",
+          [&] {
+            if (has_bit_indices_.empty()) return;
+            p->Emit(
+                R"cc(
+                  using HasBits =
+                      decltype(::std::declval<$classname$>().$has_bits$);
+                  static constexpr ::int32_t kHasBitsOffset =
+                      8 * PROTOBUF_FIELD_OFFSET($classname$, _impl_._has_bits_);
+                )cc");
+          }},
+         {"oneof",
+          [&] {
+            if (descriptor_->real_oneof_decl_count() == 0) return;
+            p->Emit(
+                R"cc(
+                  static constexpr ::int32_t kOneofCaseOffset =
+                      PROTOBUF_FIELD_OFFSET($classtype$, $oneof_case$);
+                )cc");
+          }},
+         {"required",
+          [&] {
+            if (num_required_fields_ == 0) return;
+            const std::vector<uint32_t> masks_for_has_bits =
+                RequiredFieldsBitMask();
+            p->Emit(
+                {{"check_bit_mask",
+                  ConditionalToCheckBitmasks(masks_for_has_bits, false,
+                                             "has_bits")}},
+                R"cc(
+                  static bool MissingRequiredFields(const HasBits& has_bits) {
+                    return $check_bit_mask$;
+                  }
+                )cc");
+          }}},
+        R"cc(
+          class $classname$::_Internal {
+           public:
+            $has_bit$;
+            $oneof$;
+            $required$;
+          };
+        )cc");
+    p->Emit("\n");
+  }
+
+  parse_function_generator_->GenerateParseTableHelperDefinition(p);
+  p->Emit("\n");
 
   // Generate the split instance first because it's needed in the constexpr
   // constructor.
