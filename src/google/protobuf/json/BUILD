@@ -1,4 +1,5 @@
-load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+load("@rules_cc//cc:defs.bzl", "cc_library")
 load("//build_defs:cpp_opts.bzl", "COPTS")
 
 package(
@@ -9,6 +10,173 @@ package(
 )
 
 licenses(["notice"])
+
+cc_library(
+    name = "message_path",
+    srcs = ["internal/message_path.cc"],
+    hdrs = ["internal/message_path.h"],
+    copts = COPTS,
+    strip_include_prefix = "/src",
+    deps = [
+        "//src/google/protobuf",
+        "//src/google/protobuf:port",
+        "@abseil-cpp//absl/cleanup",
+        "@abseil-cpp//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "writer",
+    srcs = ["internal/writer.cc"],
+    hdrs = ["internal/writer.h"],
+    copts = COPTS,
+    strip_include_prefix = "/src",
+    deps = [
+        "//src/google/protobuf:port",
+        "//src/google/protobuf/io",
+        "//src/google/protobuf/io:tokenizer",
+        "//src/google/protobuf/io:zero_copy_sink",
+        "//src/google/protobuf/stubs",
+        "@abseil-cpp//absl/algorithm:container",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:str_format",
+    ],
+)
+
+cc_library(
+    name = "zero_copy_buffered_stream",
+    srcs = ["internal/zero_copy_buffered_stream.cc"],
+    hdrs = ["internal/zero_copy_buffered_stream.h"],
+    copts = COPTS,
+    strip_include_prefix = "/src",
+    deps = [
+        "//src/google/protobuf:port",
+        "//src/google/protobuf/io",
+        "//src/google/protobuf/stubs",
+        "@abseil-cpp//absl/algorithm:container",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/log:absl_log",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:str_format",
+    ],
+)
+
+cc_library(
+    name = "lexer",
+    srcs = ["internal/lexer.cc"],
+    hdrs = ["internal/lexer.h"],
+    copts = COPTS,
+    strip_include_prefix = "/src",
+    deps = [
+        ":message_path",
+        ":zero_copy_buffered_stream",
+        "//src/google/protobuf",
+        "//src/google/protobuf:port",
+        "//src/google/protobuf/io",
+        "//src/google/protobuf/stubs",
+        "//third_party/utf8_range:utf8_validity",
+        "@abseil-cpp//absl/algorithm:container",
+        "@abseil-cpp//absl/base",
+        "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/numeric:bits",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:str_format",
+        "@abseil-cpp//absl/types:optional",
+    ],
+)
+
+cc_library(
+    name = "untyped_message",
+    srcs = ["internal/untyped_message.cc"],
+    hdrs = ["internal/untyped_message.h"],
+    copts = COPTS,
+    strip_include_prefix = "/src",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//:type_cc_proto",
+        "//src/google/protobuf",
+        "//src/google/protobuf:port",
+        "//src/google/protobuf:protobuf_lite",
+        "//src/google/protobuf/io",
+        "//src/google/protobuf/stubs",
+        "//src/google/protobuf/util:type_resolver",
+        "//third_party/utf8_range:utf8_validity",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/log:absl_log",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:str_format",
+        "@abseil-cpp//absl/types:optional",
+        "@abseil-cpp//absl/types:span",
+    ],
+)
+
+cc_library(
+    name = "descriptor_traits",
+    hdrs = ["internal/descriptor_traits.h"],
+    copts = COPTS,
+    strip_include_prefix = "/src",
+    deps = [
+        ":lexer",
+        ":untyped_message",
+        "//:type_cc_proto",
+        "//src/google/protobuf",
+        "//src/google/protobuf:port",
+        "//src/google/protobuf/stubs",
+        "@abseil-cpp//absl/algorithm:container",
+        "@abseil-cpp//absl/log:absl_log",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:str_format",
+        "@abseil-cpp//absl/types:optional",
+    ],
+)
+
+cc_library(
+    name = "parser",
+    srcs = [
+        "internal/parser.cc",
+    ],
+    hdrs = [
+        "internal/parser.h",
+        "internal/parser_traits.h",
+    ],
+    copts = COPTS,
+    strip_include_prefix = "/src",
+    deps = [
+        ":descriptor_traits",
+        ":lexer",
+        ":zero_copy_buffered_stream",
+        "//:type_cc_proto",
+        "//src/google/protobuf",
+        "//src/google/protobuf:port",
+        "//src/google/protobuf:protobuf_lite",
+        "//src/google/protobuf/io",
+        "//src/google/protobuf/io:zero_copy_sink",
+        "//src/google/protobuf/stubs",
+        "//src/google/protobuf/util:type_resolver",
+        "@abseil-cpp//absl/base",
+        "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/container:flat_hash_set",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/log:absl_log",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:str_format",
+        "@abseil-cpp//absl/types:optional",
+        "@abseil-cpp//absl/types:span",
+    ],
+)
 
 cc_library(
     name = "json",
@@ -65,26 +233,6 @@ cc_test(
     ],
 )
 
-cc_library(
-    name = "zero_copy_buffered_stream",
-    srcs = ["internal/zero_copy_buffered_stream.cc"],
-    hdrs = ["internal/zero_copy_buffered_stream.h"],
-    copts = COPTS,
-    strip_include_prefix = "/src",
-    deps = [
-        "//src/google/protobuf:port",
-        "//src/google/protobuf/io",
-        "//src/google/protobuf/stubs",
-        "@abseil-cpp//absl/algorithm:container",
-        "@abseil-cpp//absl/log:absl_check",
-        "@abseil-cpp//absl/log:absl_log",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/status:statusor",
-        "@abseil-cpp//absl/strings",
-        "@abseil-cpp//absl/strings:str_format",
-    ],
-)
-
 cc_test(
     name = "zero_copy_buffered_stream_test",
     srcs = ["internal/zero_copy_buffered_stream_test.cc"],
@@ -96,59 +244,6 @@ cc_test(
         "@abseil-cpp//absl/strings",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "untyped_message",
-    srcs = ["internal/untyped_message.cc"],
-    hdrs = ["internal/untyped_message.h"],
-    copts = COPTS,
-    strip_include_prefix = "/src",
-    deps = [
-        "//src/google/protobuf",
-        "//src/google/protobuf:port",
-        "//src/google/protobuf:protobuf_lite",
-        "//src/google/protobuf:type_cc_proto",
-        "//src/google/protobuf/io",
-        "//src/google/protobuf/stubs",
-        "//src/google/protobuf/util:type_resolver",
-        "//third_party/utf8_range:utf8_validity",
-        "@abseil-cpp//absl/container:flat_hash_map",
-        "@abseil-cpp//absl/log:absl_check",
-        "@abseil-cpp//absl/log:absl_log",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/strings",
-        "@abseil-cpp//absl/strings:str_format",
-        "@abseil-cpp//absl/types:optional",
-        "@abseil-cpp//absl/types:span",
-    ],
-)
-
-cc_library(
-    name = "lexer",
-    srcs = ["internal/lexer.cc"],
-    hdrs = ["internal/lexer.h"],
-    copts = COPTS,
-    strip_include_prefix = "/src",
-    deps = [
-        ":message_path",
-        ":zero_copy_buffered_stream",
-        "//src/google/protobuf",
-        "//src/google/protobuf:port",
-        "//src/google/protobuf/io",
-        "//src/google/protobuf/stubs",
-        "//third_party/utf8_range:utf8_validity",
-        "@abseil-cpp//absl/algorithm:container",
-        "@abseil-cpp//absl/base",
-        "@abseil-cpp//absl/base:core_headers",
-        "@abseil-cpp//absl/log:absl_check",
-        "@abseil-cpp//absl/numeric:bits",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/status:statusor",
-        "@abseil-cpp//absl/strings",
-        "@abseil-cpp//absl/strings:str_format",
-        "@abseil-cpp//absl/types:optional",
     ],
 )
 
@@ -171,83 +266,6 @@ cc_test(
         "@abseil-cpp//absl/strings:str_format",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "writer",
-    srcs = ["internal/writer.cc"],
-    hdrs = ["internal/writer.h"],
-    copts = COPTS,
-    strip_include_prefix = "/src",
-    deps = [
-        "//src/google/protobuf:port",
-        "//src/google/protobuf/io",
-        "//src/google/protobuf/io:tokenizer",
-        "//src/google/protobuf/io:zero_copy_sink",
-        "//src/google/protobuf/stubs:lite",
-        "@abseil-cpp//absl/algorithm:container",
-        "@abseil-cpp//absl/log:absl_check",
-        "@abseil-cpp//absl/strings",
-        "@abseil-cpp//absl/strings:str_format",
-    ],
-)
-
-cc_library(
-    name = "descriptor_traits",
-    hdrs = ["internal/descriptor_traits.h"],
-    copts = COPTS,
-    strip_include_prefix = "/src",
-    deps = [
-        ":lexer",
-        ":untyped_message",
-        "//src/google/protobuf",
-        "//src/google/protobuf:port",
-        "//src/google/protobuf/util:type_resolver",
-        "@abseil-cpp//absl/algorithm:container",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/status:statusor",
-        "@abseil-cpp//absl/strings",
-        "@abseil-cpp//absl/strings:str_format",
-        "@abseil-cpp//absl/types:optional",
-    ],
-)
-
-cc_library(
-    name = "parser",
-    srcs = [
-        "internal/parser.cc",
-    ],
-    hdrs = [
-        "internal/parser.h",
-        "internal/parser_traits.h",
-    ],
-    copts = COPTS,
-    strip_include_prefix = "/src",
-    deps = [
-        ":descriptor_traits",
-        ":lexer",
-        ":zero_copy_buffered_stream",
-        "//src/google/protobuf",
-        "//src/google/protobuf:port",
-        "//src/google/protobuf:protobuf_lite",
-        "//src/google/protobuf:type_cc_proto",
-        "//src/google/protobuf/io",
-        "//src/google/protobuf/io:zero_copy_sink",
-        "//src/google/protobuf/stubs",
-        "//src/google/protobuf/util:type_resolver",
-        "@abseil-cpp//absl/base",
-        "@abseil-cpp//absl/base:core_headers",
-        "@abseil-cpp//absl/container:flat_hash_map",
-        "@abseil-cpp//absl/container:flat_hash_set",
-        "@abseil-cpp//absl/log:absl_check",
-        "@abseil-cpp//absl/log:absl_log",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/status:statusor",
-        "@abseil-cpp//absl/strings",
-        "@abseil-cpp//absl/strings:str_format",
-        "@abseil-cpp//absl/types:optional",
-        "@abseil-cpp//absl/types:span",
     ],
 )
 
@@ -281,19 +299,5 @@ cc_library(
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:str_format",
         "@abseil-cpp//absl/types:optional",
-    ],
-)
-
-cc_library(
-    name = "message_path",
-    srcs = ["internal/message_path.cc"],
-    hdrs = ["internal/message_path.h"],
-    copts = COPTS,
-    strip_include_prefix = "/src",
-    deps = [
-        "//src/google/protobuf",
-        "//src/google/protobuf:port",
-        "@abseil-cpp//absl/cleanup",
-        "@abseil-cpp//absl/strings",
     ],
 )
