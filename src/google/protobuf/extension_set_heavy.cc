@@ -111,12 +111,8 @@ const MessageLite& ExtensionSet::GetMessage(Arena* arena, int number,
     return *factory->GetPrototype(message_type);
   } else {
     ABSL_DCHECK_TYPE(*extension, OPTIONAL, MESSAGE);
-    if (extension->is_lazy) {
-      return extension->ptr.lazymessage_value->GetMessage(
-          *factory->GetPrototype(message_type), arena);
-    } else {
-      return *extension->ptr.message_value;
-    }
+    ABSL_DCHECK(!extension->is_lazy);
+    return *extension->ptr.message_value;
   }
 }
 
@@ -139,12 +135,8 @@ MessageLite* ExtensionSet::MutableMessage(Arena* arena,
   } else {
     ABSL_DCHECK_TYPE(*extension, OPTIONAL, MESSAGE);
     extension->is_cleared = false;
-    if (extension->is_lazy) {
-      return extension->ptr.lazymessage_value->MutableMessage(
-          *factory->GetPrototype(descriptor->message_type()), arena);
-    } else {
-      return extension->ptr.message_value;
-    }
+    ABSL_DCHECK(!extension->is_lazy);
+    return extension->ptr.message_value;
   }
 }
 
@@ -159,11 +151,7 @@ MessageLite* ExtensionSet::ReleaseMessage(Arena* arena,
     ABSL_DCHECK_TYPE(*extension, OPTIONAL, MESSAGE);
     MessageLite* ret = nullptr;
     if (extension->is_lazy) {
-      ret = extension->ptr.lazymessage_value->ReleaseMessage(
-          *factory->GetPrototype(descriptor->message_type()), arena);
-      if (arena == nullptr) {
-        delete extension->ptr.lazymessage_value;
-      }
+      Unreachable();
     } else {
       if (arena != nullptr) {
         ret = extension->ptr.message_value->New();
@@ -187,11 +175,7 @@ MessageLite* ExtensionSet::UnsafeArenaReleaseMessage(
     ABSL_DCHECK_TYPE(*extension, OPTIONAL, MESSAGE);
     MessageLite* ret = nullptr;
     if (extension->is_lazy) {
-      ret = extension->ptr.lazymessage_value->UnsafeArenaReleaseMessage(
-          *factory->GetPrototype(descriptor->message_type()), arena);
-      if (arena == nullptr) {
-        delete extension->ptr.lazymessage_value;
-      }
+      Unreachable();
     } else {
       ret = extension->ptr.message_value;
     }
@@ -314,6 +298,35 @@ bool ExtensionSet::FindExtension(int wire_type, uint32_t field,
   return true;
 }
 
+      Unreachable();
+    }
+  } else {
+    ABSL_DCHECK_EQ(item->type, WireFormatLite::TYPE_MESSAGE);
+    ABSL_DCHECK(!item->is_repeated);
+    if (!item->is_lazy) {
+      // If we already had an object, we don't know which prototype was used to
+      // create it so we have to fetch the parse table from the actual object.
+      table = item->ptr.message_value->GetTcParseTable();
+    }
+  }
+  item->is_cleared = false;
+  if (item->is_lazy) {
+    Unreachable();
+  } else {
+    // Make sure the cached table pointer is in sync.
+    ABSL_DCHECK_EQ(item->ptr.message_value->GetTcParseTable(), table);
+    ptr = TcParser::ParseMessage(item->ptr.message_value, ptr, ctx, table);
+  }
+  return ptr;
+}
+
+
+const char* ExtensionSet::ParseMessageFieldMaybeLazily(
+    Arena* arena, int number, const ExtensionInfo& info, ExtensionMode mode,
+    const char* ptr, internal::ParseContext* ctx) {
+  return ParseMessageFieldMaybeLazilyImpl(arena, number, info, mode, ptr, ctx);
+}
+
 
 bool ExtensionSet::MoveExtension(Arena* arena, int dst_number,
                                  ExtensionSet& src, int src_number) {
@@ -435,12 +448,9 @@ size_t ExtensionSet::Extension::SpaceUsedExcludingSelfLong() const {
                       StringSpaceUsedExcludingSelfLong(*ptr.string_value);
         break;
       case FieldDescriptor::CPPTYPE_MESSAGE:
-        if (is_lazy) {
-          total_size += ptr.lazymessage_value->SpaceUsedLong();
-        } else {
-          total_size +=
-              DownCastMessage<Message>(ptr.message_value)->SpaceUsedLong();
-        }
+        ABSL_DCHECK(!is_lazy);
+        total_size +=
+            DownCastMessage<Message>(ptr.message_value)->SpaceUsedLong();
         break;
       default:
         // No extra storage costs for primitive types.
