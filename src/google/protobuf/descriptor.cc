@@ -2386,7 +2386,8 @@ DescriptorPool::DescriptorPool()
       enforce_extension_declarations_(ExtDeclEnforcementLevel::kNoEnforcement),
       disallow_enforce_utf8_(false),
       deprecated_legacy_json_field_conflicts_(false),
-      enforce_naming_style_(false) {}
+      enforce_naming_style_(false),
+      enforce_proto_limits_(false) {}
 
 DescriptorPool::DescriptorPool(DescriptorDatabase* fallback_database,
                                ErrorCollector* error_collector)
@@ -2402,7 +2403,8 @@ DescriptorPool::DescriptorPool(DescriptorDatabase* fallback_database,
       enforce_extension_declarations_(ExtDeclEnforcementLevel::kNoEnforcement),
       disallow_enforce_utf8_(false),
       deprecated_legacy_json_field_conflicts_(false),
-      enforce_naming_style_(false) {}
+      enforce_naming_style_(false),
+      enforce_proto_limits_(false) {}
 
 DescriptorPool::DescriptorPool(const DescriptorPool* underlay)
     : mutex_(nullptr),
@@ -2417,7 +2419,8 @@ DescriptorPool::DescriptorPool(const DescriptorPool* underlay)
       enforce_extension_declarations_(ExtDeclEnforcementLevel::kNoEnforcement),
       disallow_enforce_utf8_(false),
       deprecated_legacy_json_field_conflicts_(false),
-      enforce_naming_style_(false) {}
+      enforce_naming_style_(false),
+      enforce_proto_limits_(false) {}
 
 DescriptorPool::~DescriptorPool() {
   if (mutex_ != nullptr) delete mutex_;
@@ -5077,6 +5080,15 @@ class DescriptorBuilder {
   // so that VisitDescriptors can be exhaustive.
   void ValidateNamingStyle(const Descriptor::ExtensionRange* ext_range,
                            const DescriptorProto::ExtensionRange& proto) {}
+
+  template <typename DescriptorT, typename DescriptorProtoT>
+  void ValidateProtoLimits(const DescriptorT* file,
+                           const DescriptorProtoT& proto);
+
+  // Nothing to validate for extension ranges. This overload only exists
+  // so that VisitDescriptors can be exhaustive.
+  void ValidateProtoLimits(const Descriptor::ExtensionRange* ext_range,
+                           const DescriptorProto::ExtensionRange& proto) {}
 };
 
 const FileDescriptor* DescriptorPool::BuildFile(
@@ -6732,6 +6744,17 @@ FileDescriptor* DescriptorBuilder::BuildFileImpl(
         *result, proto, [&](const auto& descriptor, const auto& desc_proto) {
           if (IsStyleOrGreater(&descriptor, FeatureSet::STYLE2024)) {
             ValidateNamingStyle(&descriptor, desc_proto);
+          }
+        });
+  }
+
+  if (!had_errors_ && pool_->enforce_proto_limits_) {
+    internal::VisitDescriptors(
+        *result, proto, [&](const auto& descriptor, const auto& desc_proto) {
+          if (internal::InternalFeatureHelper::GetFeatures(descriptor)
+                  .enforce_proto_limits() !=
+              FeatureSet::ProtoLimitsFeature::LEGACY_NO_EXPLICIT_LIMITS) {
+            ValidateProtoLimits(&descriptor, desc_proto);
           }
         });
   }
@@ -9405,6 +9428,10 @@ constexpr absl::string_view kNamingStyleOptOutMessage =
     " (features.enforce_naming_style = STYLE_LEGACY can be used to opt out of "
     "this check)";
 
+constexpr absl::string_view kProtoLimitsOptOutMessage =
+    " (features.enforce_proto_limits = LEGACY_NO_EXPLICIT_LIMITS can be used "
+    "to opt out of this check)";
+
 }  // namespace
 
 constexpr absl::string_view kNamingStyleCollisionsOptOutMessage =
@@ -9528,6 +9555,92 @@ void DescriptorBuilder::ValidateNamingStyle(
                           kNamingStyleOptOutMessage);
     });
   }
+}
+
+// -------------------------------------------------------------------
+
+template <>
+void DescriptorBuilder::ValidateProtoLimits(const FileDescriptor* file,
+                                            const FileDescriptorProto& proto) {
+  // No checks for files.
+}
+
+template <>
+void DescriptorBuilder::ValidateProtoLimits(const Descriptor* message,
+                                            const DescriptorProto& proto) {
+  // Validate the protobuf field limit per message.
+  // See go/protobuf-enforce-proto-limits
+  if (message->field_count() > 2048) {
+    AddError(message->name(), proto, DescriptorPool::ErrorCollector::NAME, [&] {
+      return absl::StrCat("Message name ", message->name(), " ",
+                          "should not contain more than 2048 fields",
+                          kProtoLimitsOptOutMessage);
+    });
+  }
+  // Validate the protobuf oneof limit per message.
+  // See go/protobuf-enforce-proto-limits
+  if (message->real_oneof_decl_count() > 1700) {
+    AddError(message->name(), proto, DescriptorPool::ErrorCollector::NAME, [&] {
+      return absl::StrCat("Message name ", message->name(), " ",
+                          "should not contain more than 1700 oneofs",
+                          kProtoLimitsOptOutMessage);
+    });
+  }
+}
+
+template <>
+void DescriptorBuilder::ValidateProtoLimits(const OneofDescriptor* oneof,
+                                            const OneofDescriptorProto& proto) {
+  // Validate the protobuf field limit per oneof.
+  // See go/protobuf-enforce-proto-limits
+  if (oneof->field_count() > 1700) {
+    AddError(oneof->name(), proto, DescriptorPool::ErrorCollector::NAME, [&] {
+      return absl::StrCat("Oneof name ", oneof->name(), " ",
+                          "should not contain more than 1700 fields",
+                          kProtoLimitsOptOutMessage);
+    });
+  }
+}
+
+template <>
+void DescriptorBuilder::ValidateProtoLimits(const FieldDescriptor* field,
+                                            const FieldDescriptorProto& proto) {
+  // No checks for fields.
+}
+
+template <>
+void DescriptorBuilder::ValidateProtoLimits(
+    const EnumDescriptor* enum_descriptor, const EnumDescriptorProto& proto) {
+  // Validate the protobuf value limit per enum.
+  // See go/protobuf-enforce-proto-limits
+  if (enum_descriptor->value_count() > 1700) {
+    AddError(enum_descriptor->name(), proto,
+             DescriptorPool::ErrorCollector::NAME, [&] {
+               return absl::StrCat("Enum name ", enum_descriptor->name(), " ",
+                                   "should not contain more than 1700 values",
+                                   kProtoLimitsOptOutMessage);
+             });
+  }
+  return;
+}
+
+template <>
+void DescriptorBuilder::ValidateProtoLimits(
+    const EnumValueDescriptor* enum_value,
+    const EnumValueDescriptorProto& proto) {
+  // No check for enum values.
+}
+
+template <>
+void DescriptorBuilder::ValidateProtoLimits(
+    const ServiceDescriptor* service, const ServiceDescriptorProto& proto) {
+  // No check for services.
+}
+
+template <>
+void DescriptorBuilder::ValidateProtoLimits(
+    const MethodDescriptor* method, const MethodDescriptorProto& proto) {
+  // No check for methods.
 }
 
 // -------------------------------------------------------------------

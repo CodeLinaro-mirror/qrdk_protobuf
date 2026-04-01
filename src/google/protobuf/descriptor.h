@@ -2498,6 +2498,9 @@ class PROTOBUF_EXPORT DescriptorPool {
   // of this enforcement.
   void EnforceNamingStyle(bool enforce) { enforce_naming_style_ = enforce; }
 
+  // TODO document this.
+  void EnforceProtoLimits(bool enforce) { enforce_proto_limits_ = enforce; }
+
   // Enforce validation of feature support.
   //
   // This is used to guard feature support validation for the lifetimes of
@@ -2811,6 +2814,7 @@ class PROTOBUF_EXPORT DescriptorPool {
   bool disallow_enforce_utf8_;
   bool deprecated_legacy_json_field_conflicts_;
   bool enforce_naming_style_;
+  bool enforce_proto_limits_;
   bool enforce_feature_support_validation_ = false;
   bool enforce_symbol_visibility_ = false;
   mutable bool build_started_ = false;

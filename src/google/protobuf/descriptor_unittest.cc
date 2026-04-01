@@ -11248,6 +11248,114 @@ TEST_F(FeaturesTest, BadMethodName) {
       "Method name badMethodName should begin with a capital letter");
 }
 
+TEST_F(FeaturesTest, ProtoLimits2026FieldsPerMessage) {
+  BuildDescriptorMessagesInTestPool();
+  pool_.EnforceProtoLimits(true);
+
+  std::string text_proto_string = R"schema(
+    edition = "2026";
+    package naming1;
+    message M {
+  )schema";
+  // Continuously append to the textproto string up to our proto limit.
+  for (int i = 1; i <= 2049; ++i) {
+    absl::StrAppend(&text_proto_string,
+                    absl::StrFormat("    int32 field_%d = %d;\n", i, i));
+  }
+  absl::StrAppend(&text_proto_string, "}");
+
+  ParseAndBuildFileWithErrorSubstr(
+      "naming1.proto", text_proto_string,
+      "Message name M should not contain more than 2048 fields "
+      "(features.enforce_proto_limits = LEGACY_NO_EXPLICIT_LIMITS "
+      "can be used to opt out of this check)");
+}
+
+TEST_F(FeaturesTest, ProtoLimits2026ValuesPerEnum) {
+  BuildDescriptorMessagesInTestPool();
+  pool_.EnforceProtoLimits(true);
+
+  std::string text_proto_string = R"schema(
+    edition = "2026";
+    package naming1;
+    message M {
+      enum E {
+        E_UNKNOWN = 0;
+  )schema";
+  // Continuously append to the textproto string up to our proto limit.
+  for (int i = 1; i <= 1701; ++i) {
+    absl::StrAppend(&text_proto_string,
+                    absl::StrFormat("        NUMBER_%d = %d;", i, i));
+  }
+  absl::StrAppend(&text_proto_string, R"schema(
+      }
+      E enum_field = 1;
+    }
+  )schema");
+
+  ParseAndBuildFileWithErrorSubstr(
+      "naming1.proto", text_proto_string,
+      "Enum name E should not contain more than 1700 values "
+      "(features.enforce_proto_limits = LEGACY_NO_EXPLICIT_LIMITS "
+      "can be used to opt out of this check)");
+}
+
+TEST_F(FeaturesTest, ProtoLimits2026FieldsPerOneof) {
+  BuildDescriptorMessagesInTestPool();
+  pool_.EnforceProtoLimits(true);
+
+  std::string text_proto_string = R"schema(
+    edition = "2026";
+    package naming1;
+    message M {
+      oneof O {
+  )schema";
+  // Continuously append to the textproto string up to our proto limit.
+  for (int i = 1; i <= 1701; ++i) {
+    absl::StrAppend(&text_proto_string,
+                    absl::StrFormat("        int32 int_field_%d = %d;", i, i));
+  }
+  absl::StrAppend(&text_proto_string, R"schema(
+      }
+    }
+  )schema");
+
+  ParseAndBuildFileWithErrorSubstr(
+      "naming1.proto", text_proto_string,
+      "Oneof name O should not contain more than 1700 fields "
+      "(features.enforce_proto_limits = LEGACY_NO_EXPLICIT_LIMITS "
+      "can be used to opt out of this check)");
+}
+
+TEST_F(FeaturesTest, ProtoLimits2026OneofsPerMessage) {
+  BuildDescriptorMessagesInTestPool();
+  pool_.EnforceProtoLimits(true);
+
+  std::string text_proto_string = R"schema(
+    edition = "2026";
+    package naming1;
+    message M {
+  )schema";
+  // Continuously append to the textproto string up to our proto limit.
+  for (int i = 1; i <= 1701; ++i) {
+    absl::StrAppend(&text_proto_string, absl::StrFormat(R"schema(
+                      oneof O_%d {
+                        int32 int_field_%d = %d;
+                      }
+                    )schema",
+                                                        i, i, i));
+  }
+  absl::StrAppend(&text_proto_string, R"schema(
+    }
+  )schema");
+
+  ParseAndBuildFileWithErrorSubstr(
+      "naming1.proto", text_proto_string,
+      "Message name M should not contain more than 1700 oneofs "
+      "(features.enforce_proto_limits = LEGACY_NO_EXPLICIT_LIMITS "
+      "can be used to opt out of this check)");
+}
+
 TEST_F(FeaturesTest, MapFieldFeaturesInheritedMessageEncoding) {
   BuildDescriptorMessagesInTestPool();
   const FileDescriptor* file = ParseAndBuildFile("foo.proto", R"schema(
