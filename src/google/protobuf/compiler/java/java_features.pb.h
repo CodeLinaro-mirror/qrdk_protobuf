@@ -190,12 +190,11 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED JavaFeatures_NestInFi
 
   template <typename = void>
   explicit constexpr JavaFeatures_NestInFileClassFeature(::google::protobuf::internal::ConstantInitialized,
-                                 const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
-                                     class_data);
+                           const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
+                               class_data);
 
   inline JavaFeatures_NestInFileClassFeature(const JavaFeatures_NestInFileClassFeature& from) : JavaFeatures_NestInFileClassFeature(nullptr, from) {}
-  inline JavaFeatures_NestInFileClassFeature(JavaFeatures_NestInFileClassFeature&& from) noexcept
-      : JavaFeatures_NestInFileClassFeature(nullptr, ::std::move(from)) {}
+  inline JavaFeatures_NestInFileClassFeature(JavaFeatures_NestInFileClassFeature&& from) noexcept : JavaFeatures_NestInFileClassFeature(nullptr, ::std::move(from)) {}
   inline JavaFeatures_NestInFileClassFeature& operator=(const JavaFeatures_NestInFileClassFeature& from) {
     CopyFrom(from);
     return *this;
@@ -208,6 +207,9 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED JavaFeatures_NestInFi
       CopyFrom(from);
     }
     return *this;
+  }
+  static constexpr const void* PROTOBUF_NONNULL internal_message_globals() {
+    return &_JavaFeatures_NestInFileClassFeature_globals_;
   }
 
   [[nodiscard]] inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
@@ -230,8 +232,7 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED JavaFeatures_NestInFi
     return default_instance().GetMetadata().reflection;
   }
   [[nodiscard]] static const JavaFeatures_NestInFileClassFeature& default_instance() {
-    return *::google::protobuf::internal::MessageGlobalsBase::ToDefaultInstance<JavaFeatures_NestInFileClassFeature>(
-        &_JavaFeatures_NestInFileClassFeature_globals_);
+    return *::google::protobuf::internal::MessageGlobalsBase::ToDefaultInstance<JavaFeatures_NestInFileClassFeature>(&_JavaFeatures_NestInFileClassFeature_globals_);
   }
   static constexpr int kIndexInFileMessages = 0;
   friend void swap(JavaFeatures_NestInFileClassFeature& a, JavaFeatures_NestInFileClassFeature& b) { a.Swap(&b); }
@@ -256,13 +257,9 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED JavaFeatures_NestInFi
     return ::google::protobuf::internal::ZeroFieldsBase::DefaultConstruct<JavaFeatures_NestInFileClassFeature>(arena);
   }
   using ::google::protobuf::internal::ZeroFieldsBase::CopyFrom;
-  inline void CopyFrom(const JavaFeatures_NestInFileClassFeature& from) {
-    ::google::protobuf::internal::ZeroFieldsBase::CopyImpl(*this, from);
-  }
+  inline void CopyFrom(const JavaFeatures_NestInFileClassFeature& from) { ::google::protobuf::internal::ZeroFieldsBase::CopyImpl(*this, from); }
   using ::google::protobuf::internal::ZeroFieldsBase::MergeFrom;
-  void MergeFrom(const JavaFeatures_NestInFileClassFeature& from) {
-    ::google::protobuf::internal::ZeroFieldsBase::MergeImpl(*this, from);
-  }
+  void MergeFrom(const JavaFeatures_NestInFileClassFeature& from) { ::google::protobuf::internal::ZeroFieldsBase::MergeImpl(*this, from); }
 
   public:
   [[nodiscard]] bool IsInitialized() const {
@@ -288,7 +285,8 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED JavaFeatures_NestInFi
 
  public:
   static constexpr auto InternalGenerateClassData_(
-      const MessageLite& prototype);
+      const MessageLite& prototype,
+      const ::google::protobuf::internal::TcParseTableBase* PROTOBUF_NULLABLE tc_table = nullptr);
 
   [[nodiscard]] ::google::protobuf::Metadata GetMetadata() const;
   // nested types ----------------------------------------------------
@@ -326,7 +324,9 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED JavaFeatures_NestInFi
   static constexpr ParseTableT_ InternalGenerateParseTable_(
       const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL class_data);
   friend class ::google::protobuf::internal::TcParser;
+  #ifndef PROTOBUF_MESSAGE_GLOBALS
   static const ParseTableT_ _table_;
+  #endif
 
   friend class ::google::protobuf::MessageLite;
   friend class ::google::protobuf::Arena;
@@ -354,12 +354,11 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED JavaFeatures final : 
 
   template <typename = void>
   explicit constexpr JavaFeatures(::google::protobuf::internal::ConstantInitialized,
-                                 const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
-                                     class_data);
+                           const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
+                               class_data);
 
   inline JavaFeatures(const JavaFeatures& from) : JavaFeatures(nullptr, from) {}
-  inline JavaFeatures(JavaFeatures&& from) noexcept
-      : JavaFeatures(nullptr, ::std::move(from)) {}
+  inline JavaFeatures(JavaFeatures&& from) noexcept : JavaFeatures(nullptr, ::std::move(from)) {}
   inline JavaFeatures& operator=(const JavaFeatures& from) {
     CopyFrom(from);
     return *this;
@@ -372,6 +371,9 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED JavaFeatures final : 
       CopyFrom(from);
     }
     return *this;
+  }
+  static constexpr const void* PROTOBUF_NONNULL internal_message_globals() {
+    return &_JavaFeatures_globals_;
   }
 
   [[nodiscard]] inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
@@ -394,8 +396,7 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED JavaFeatures final : 
     return default_instance().GetMetadata().reflection;
   }
   [[nodiscard]] static const JavaFeatures& default_instance() {
-    return *::google::protobuf::internal::MessageGlobalsBase::ToDefaultInstance<JavaFeatures>(
-        &_JavaFeatures_globals_);
+    return *::google::protobuf::internal::MessageGlobalsBase::ToDefaultInstance<JavaFeatures>(&_JavaFeatures_globals_);
   }
   static constexpr int kIndexInFileMessages = 1;
   friend void swap(JavaFeatures& a, JavaFeatures& b) { a.Swap(&b); }
@@ -481,7 +482,8 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED JavaFeatures final : 
 
  public:
   static constexpr auto InternalGenerateClassData_(
-      const MessageLite& prototype);
+      const MessageLite& prototype,
+      const ::google::protobuf::internal::TcParseTableBase* PROTOBUF_NULLABLE tc_table = nullptr);
 
   [[nodiscard]] ::google::protobuf::Metadata GetMetadata() const;
   // nested types ----------------------------------------------------
@@ -586,7 +588,9 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED JavaFeatures final : 
   static constexpr ParseTableT_ InternalGenerateParseTable_(
       const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL class_data);
   friend class ::google::protobuf::internal::TcParser;
+  #ifndef PROTOBUF_MESSAGE_GLOBALS
   static const ParseTableT_ _table_;
+  #endif
 
   friend class ::google::protobuf::MessageLite;
   friend class ::google::protobuf::Arena;

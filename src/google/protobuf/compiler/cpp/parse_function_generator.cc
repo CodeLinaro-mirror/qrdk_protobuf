@@ -66,7 +66,6 @@ ParseFunctionGenerator::ParseFunctionGenerator(
       BuildTcTableInfoFromDescriptor(descriptor_, options_, fields));
   SetCommonMessageDataVariables(descriptor_, &variables_);
   SetUnknownFieldsVariable(descriptor_, options_, &variables_);
-  variables_["classname"] = ClassName(descriptor, false);
 }
 
 std::vector<internal::TailCallTableInfo::FieldOptions>
@@ -165,29 +164,19 @@ void ParseFunctionGenerator::GenerateDataDecls(io::Printer* p) {
   auto v = p->WithVars(variables_);
   p->Emit({{"SECTION",
             [&] {
-              if (!IsProfileDriven(options_)) return;
-              std::string section_name;
-              // Since most (>80%) messages are never present, messages that are
-              // present are considered hot enough to be clustered together.
-              // When using weak descriptors we use unique sections for each
-              // table to allow for GC to work. pth/ptl names must be in sync
-              // with the linker script.
-              if (UsingImplicitWeakDescriptor(descriptor_->file(), options_)) {
-                section_name = WeakDescriptorDataSection(
-                    IsPresentMessage(descriptor_, options_) ? "pth" : "ptl",
-                    descriptor_, index_in_file_messages_, options_);
-              } else if (IsPresentMessage(descriptor_, options_)) {
-                section_name = "proto_parse_table_hot";
-              } else {
-                section_name = "proto_parse_table_lukewarm";
-              }
-              p->Emit({{"section_name", section_name}},
+              auto section_name = MaybeDedicateSection(descriptor_, options_,
+                                                       index_in_file_messages_);
+              if (!section_name.has_value()) return;
+
+              p->Emit({{"section_name", *section_name}},
                       "ABSL_ATTRIBUTE_SECTION_VARIABLE($section_name$)");
             }}},
           R"cc(
             friend class $pbi$::TcParser;
+#ifndef PROTOBUF_MESSAGE_GLOBALS
             $SECTION$
             static const ParseTableT_ _table_;
+#endif
           )cc");
 }
 
@@ -197,15 +186,12 @@ void ParseFunctionGenerator::GenerateDataDefinitions(io::Printer* p) {
       MakeNumToEntryTable(ordered_fields_);
   p->Emit(
       R"cc(
+#ifndef PROTOBUF_MESSAGE_GLOBALS
         PROTOBUF_CONSTINIT
         PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 const $Msg$::ParseTableT_
-            $Msg$::_table_ = $Msg$::InternalGenerateParseTable_(
-#ifndef PROTOBUF_MESSAGE_GLOBALS
-                $Msg$_class_data_.base()
-#else
-                $globals$.GetClassData()
-#endif  // PROTOBUF_MESSAGE_GLOBALS
-            );
+            $Msg$::_table_ =
+                $Msg$::InternalGenerateParseTable_($Msg$_class_data_.base());
+#endif  // !PROTOBUF_MESSAGE_GLOBALS
       )cc");
 }
 
@@ -302,12 +288,11 @@ void ParseFunctionGenerator::GenerateParseTableHelperDefinition(
         {{"has_bits_offset",
           [&] {
             if (num_hasbits_ > 0 || IsMapEntryMessage(descriptor_)) {
-              p->Emit(
-                  "PROTOBUF_FIELD_OFFSET($classname$, _impl_._has_bits_),\n");
+              p->Emit("PROTOBUF_FIELD_OFFSET($Msg$, _impl_._has_bits_),\n");
             } else {
               // Just put something safe here. _cached_size_ is fine.
               p->Emit(R"cc(
-                PROTOBUF_FIELD_OFFSET($classname$,
+                PROTOBUF_FIELD_OFFSET($Msg$,
                                       _impl_._cached_size_),  // no hasbits
               )cc");
             }
@@ -315,7 +300,7 @@ void ParseFunctionGenerator::GenerateParseTableHelperDefinition(
          {"extension_offset",
           [&] {
             if (descriptor_->extension_range_count() != 0) {
-              p->Emit("PROTOBUF_FIELD_OFFSET($classname$, $extensions$),\n");
+              p->Emit("PROTOBUF_FIELD_OFFSET($Msg$, $extensions$),\n");
             } else {
               p->Emit("0, // no _extensions_\n");
             }
@@ -353,7 +338,7 @@ void ParseFunctionGenerator::GenerateParseTableHelperDefinition(
          {"post_loop_handler",
           [&] {
             if (NeedsPostLoopHandler(descriptor_, options_)) {
-              p->Emit("&$classname$::PostLoopHandler,\n");
+              p->Emit("&$Msg$::PostLoopHandler,\n");
             } else {
               p->Emit("nullptr,  // post_loop_handler\n");
             }
@@ -404,10 +389,10 @@ void ParseFunctionGenerator::GenerateParseTableHelperDefinition(
           p->Emit("{},\n");
           break;
         case TailCallTableInfo::kSplitOffset:
-          p->Emit("{_fl::Offset{offsetof($classname$, _impl_._split_)}},\n");
+          p->Emit("{_fl::Offset{offsetof($Msg$, _impl_._split_)}},\n");
           break;
         case TailCallTableInfo::kSplitSizeof:
-          p->Emit("{_fl::Offset{sizeof($classname$::Impl_::Split)}},\n");
+          p->Emit("{_fl::Offset{sizeof($Msg$::Impl_::Split)}},\n");
           break;
         case TailCallTableInfo::kSubMessageGlobals:
           p->Emit({{"name", QualifiedMsgGlobalsInstanceName(
@@ -417,9 +402,21 @@ void ParseFunctionGenerator::GenerateParseTableHelperDefinition(
                   )cc");
           break;
         case TailCallTableInfo::kSubTable:
-          p->Emit({{"name", QualifiedClassName(aux_entry.field->message_type(),
-                                               options_)}},
-                  "{::_pbi::TcParser::GetTable<$name$>()},\n");
+          p->Emit(
+              {
+                  {"sub_type", QualifiedClassName(
+                                   aux_entry.field->message_type(), options_)},
+                  {"sub_globals",
+                   QualifiedMsgGlobalsInstanceName(
+                       aux_entry.field->message_type(), options_)},
+              },
+              R"cc(
+#ifndef PROTOBUF_MESSAGE_GLOBALS
+                {::_pbi::TcParser::GetTable<$sub_type$>()},
+#else
+                {::_pbi::FieldAuxMessageGlobals(), &$sub_globals$},
+#endif
+              )cc");
           break;
         case TailCallTableInfo::kSubMessageGlobalsWeak:
           p->Emit({{"ptr", QualifiedMsgGlobalsInstancePtr(
@@ -575,7 +572,7 @@ void ParseFunctionGenerator::GenerateParseTableHelperDefinition(
       // insert a newline at every brace, whereas we prefer {{ ... }} here.
       // clang-format off
 R"cc(
-constexpr $Msg$::ParseTableT_ $classname$::InternalGenerateParseTable_(const ::_pbi::ClassData* class_data) {
+constexpr $Msg$::ParseTableT_ $Msg$::InternalGenerateParseTable_(const ::_pbi::ClassData* class_data) {
   return ParseTableT_{
     {
       $table_base$
@@ -647,7 +644,7 @@ void ParseFunctionGenerator::GenerateFastFieldEntries(io::Printer* p) {
           R"cc(
             {$target$,
              {$coded_tag$, $hasbit_idx$, $aux_idx$,
-              PROTOBUF_FIELD_OFFSET($classname$, $field_name$)}},
+              PROTOBUF_FIELD_OFFSET($Msg$, $field_name$)}},
           )cc");
     } else {
       ABSL_DCHECK(info.is_empty());
@@ -680,11 +677,10 @@ void ParseFunctionGenerator::GenerateFieldEntries(io::Printer* p) {
               p->Emit("/* weak */ 0,");
             } else if (split) {
               p->Emit(
-                  "PROTOBUF_FIELD_OFFSET($classname$::Impl_::Split, "
+                  "PROTOBUF_FIELD_OFFSET($Msg$::Impl_::Split, "
                   "$field_name$_),");
             } else {
-              p->Emit(
-                  "PROTOBUF_FIELD_OFFSET($classname$, $field_member_name$),");
+              p->Emit("PROTOBUF_FIELD_OFFSET($Msg$, $field_member_name$),");
             }
           }},
          {"has_idx",

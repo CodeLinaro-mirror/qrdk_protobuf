@@ -37,8 +37,7 @@ PROTOBUF_CONSTINIT ::google::protobuf::internal::ReflectionData
 namespace pb {
 class CppFeatures::_Internal {
  public:
-  using HasBits =
-      decltype(::std::declval<CppFeatures>()._impl_._has_bits_);
+  using HasBits = decltype(::std::declval<CppFeatures>()._impl_._has_bits_);
   static constexpr ::int32_t kHasBitsOffset =
       8 * PROTOBUF_FIELD_OFFSET(CppFeatures, _impl_._has_bits_);
 };
@@ -125,15 +124,19 @@ inline void* PROTOBUF_NONNULL CppFeatures::PlacementNew_(
   return ::new (mem) CppFeatures(arena);
 }
 constexpr auto CppFeatures::InternalNewImpl_() {
-  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(CppFeatures),
-                                            alignof(CppFeatures));
+  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(CppFeatures), alignof(CppFeatures));
 }
 constexpr auto CppFeatures::InternalGenerateClassData_(
-    const MessageLite& prototype) {
+    const MessageLite& prototype,
+    const ::google::protobuf::internal::TcParseTableBase* tc_table) {
   return ::google::protobuf::internal::ClassDataFull{
       ::google::protobuf::internal::ClassData{
           &prototype,
+#ifndef PROTOBUF_MESSAGE_GLOBALS
           &_table_.header,
+#else
+          tc_table,
+#endif
           nullptr,  // IsInitialized
           &CppFeatures::MergeImpl,
           ::google::protobuf::Message::GetNewImpl<CppFeatures>(),
@@ -162,8 +165,12 @@ struct CppFeaturesGlobalsTypeInternal : ::_pbi::MessageGlobalsBase {
                  CppFeatures_class_data_.base())
 #else   // !PROTOBUF_MESSAGE_GLOBALS
         MessageGlobalsBase(
-            CppFeatures::InternalGenerateClassData_(_default)),
-        _default(::_pbi::ConstantInitialized{}, GetClassData())
+            CppFeatures::InternalGenerateClassData_(
+                _default, &_CppFeatures_globals_._table.header),
+            &_CppFeatures_globals_._table.header),
+        _default(::_pbi::ConstantInitialized{}, GetClassData()),
+        _table(::_pbi::PrivateAccess::GenerateParseTable<CppFeatures>(
+            GetClassData()))
 #endif  // PROTOBUF_MESSAGE_GLOBALS
   {
   }
@@ -171,6 +178,10 @@ struct CppFeaturesGlobalsTypeInternal : ::_pbi::MessageGlobalsBase {
   union {
     alignas(::_pbi::kMaxMessageAlignment) CppFeatures _default;
   };
+#ifdef PROTOBUF_MESSAGE_GLOBALS
+  decltype(::_pbi::PrivateAccess::GenerateParseTable<CppFeatures>(
+      ::std::declval<const ::_pbi::ClassData*>())) _table;
+#endif
 };
 #ifdef PROTOBUF_MESSAGE_GLOBALS
 static_assert(PROTOBUF_FIELD_OFFSET(CppFeaturesGlobalsTypeInternal, _default) ==
@@ -178,7 +189,8 @@ static_assert(PROTOBUF_FIELD_OFFSET(CppFeaturesGlobalsTypeInternal, _default) ==
 #endif  // PROTOBUF_MESSAGE_GLOBALS
 
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_EXPORT
-    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 CppFeaturesGlobalsTypeInternal _CppFeatures_globals_;
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1  CppFeaturesGlobalsTypeInternal
+        _CppFeatures_globals_;
 #if defined(PROTOBUF_CUSTOM_VTABLE)
 namespace {
 const ::_pbi::ClassData* CppFeatures_get_class_data() {
@@ -343,19 +355,17 @@ CppFeatures::GetClassData() const {
 PROTOBUF_ATTRIBUTE_WEAK const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
 CppFeatures::GetClassData() const {
   ::google::protobuf::internal::PrefetchToLocalCache(&_CppFeatures_globals_);
-  ::google::protobuf::internal::PrefetchToLocalCache(_CppFeatures_globals_.GetClassData()->tc_table);
+  ::google::protobuf::internal::PrefetchToLocalCache(
+      ::google::protobuf::internal::MessageGlobalsBase::ToParseTableBase(&_CppFeatures_globals_));
   return _CppFeatures_globals_.GetClassData();
 }
 #endif  // !PROTOBUF_MESSAGE_GLOBALS
+#ifndef PROTOBUF_MESSAGE_GLOBALS
 PROTOBUF_CONSTINIT
 PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 const CppFeatures::ParseTableT_
-    CppFeatures::_table_ = CppFeatures::InternalGenerateParseTable_(
-#ifndef PROTOBUF_MESSAGE_GLOBALS
-        CppFeatures_class_data_.base()
-#else
-        _CppFeatures_globals_.GetClassData()
-#endif  // PROTOBUF_MESSAGE_GLOBALS
-    );
+    CppFeatures::_table_ =
+        CppFeatures::InternalGenerateParseTable_(CppFeatures_class_data_.base());
+#endif  // !PROTOBUF_MESSAGE_GLOBALS
 PROTOBUF_NOINLINE void CppFeatures::Clear() {
 // @@protoc_insertion_point(message_clear_start:pb.CppFeatures)
   ::google::protobuf::internal::TSanWrite(&_impl_);
@@ -463,9 +473,8 @@ PROTOBUF_NOINLINE void CppFeatures::Clear() {
 }
 
 void CppFeatures::MergeImpl(::google::protobuf::MessageLite& to_msg,
-                            const ::google::protobuf::MessageLite& from_msg) {
-   auto* const _this =
-      static_cast<CppFeatures*>(&to_msg);
+                      const ::google::protobuf::MessageLite& from_msg) {
+   auto* const _this = static_cast<CppFeatures*>(&to_msg);
   auto& from = static_cast<const CppFeatures&>(from_msg);
   if constexpr (::_pbi::DebugHardenCheckHasBitConsistency()) {
     from.CheckHasBitConsistency();

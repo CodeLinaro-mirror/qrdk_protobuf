@@ -1040,6 +1040,12 @@ bool IsProfileDriven(const Options& options) {
          options.access_info_map != nullptr;
 }
 
+absl::optional<std::string> MaybeDedicateSection(const Descriptor* descriptor,
+                                                 const Options& options,
+                                                 int index_in_file_messages) {
+  return absl::nullopt;
+}
+
 bool IsRarelyPresent(const FieldDescriptor* field, const Options& options) {
   return false;
 }
@@ -1326,7 +1332,6 @@ bool HasMapFields(const FileDescriptor* file) {
   }
   return false;
 }
-
 
 static bool HasEnumDefinitions(const Descriptor* message_type) {
   if (message_type->enum_type_count() > 0) return true;

@@ -380,6 +380,11 @@ bool IsMicroString(const FieldDescriptor* field, const Options& opts);
 
 bool IsProfileDriven(const Options& options);
 
+// Returns the dedicated section name if message hotness profile is available.
+absl::optional<std::string> MaybeDedicateSection(const Descriptor* desc,
+                                                 const Options& options,
+                                                 int index_in_file_messages);
+
 // Returns true if `field` is unlikely to be present based on PDProto profile.
 PROTOC_EXPORT bool IsRarelyPresent(const FieldDescriptor* field,
                                    const Options& options);

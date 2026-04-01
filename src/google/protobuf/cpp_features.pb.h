@@ -184,12 +184,11 @@ class PROTOBUF_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CppFeatures final :
 
   template <typename = void>
   explicit constexpr CppFeatures(::google::protobuf::internal::ConstantInitialized,
-                                 const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
-                                     class_data);
+                           const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
+                               class_data);
 
   inline CppFeatures(const CppFeatures& from) : CppFeatures(nullptr, from) {}
-  inline CppFeatures(CppFeatures&& from) noexcept
-      : CppFeatures(nullptr, ::std::move(from)) {}
+  inline CppFeatures(CppFeatures&& from) noexcept : CppFeatures(nullptr, ::std::move(from)) {}
   inline CppFeatures& operator=(const CppFeatures& from) {
     CopyFrom(from);
     return *this;
@@ -202,6 +201,9 @@ class PROTOBUF_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CppFeatures final :
       CopyFrom(from);
     }
     return *this;
+  }
+  static constexpr const void* PROTOBUF_NONNULL internal_message_globals() {
+    return &_CppFeatures_globals_;
   }
 
   [[nodiscard]] inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
@@ -224,8 +226,7 @@ class PROTOBUF_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CppFeatures final :
     return default_instance().GetMetadata().reflection;
   }
   [[nodiscard]] static const CppFeatures& default_instance() {
-    return *::google::protobuf::internal::MessageGlobalsBase::ToDefaultInstance<CppFeatures>(
-        &_CppFeatures_globals_);
+    return *::google::protobuf::internal::MessageGlobalsBase::ToDefaultInstance<CppFeatures>(&_CppFeatures_globals_);
   }
   static constexpr int kIndexInFileMessages = 0;
   friend void swap(CppFeatures& a, CppFeatures& b) { a.Swap(&b); }
@@ -311,7 +312,8 @@ class PROTOBUF_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CppFeatures final :
 
  public:
   static constexpr auto InternalGenerateClassData_(
-      const MessageLite& prototype);
+      const MessageLite& prototype,
+      const ::google::protobuf::internal::TcParseTableBase* PROTOBUF_NULLABLE tc_table = nullptr);
 
   [[nodiscard]] ::google::protobuf::Metadata GetMetadata() const;
   // nested types ----------------------------------------------------
@@ -424,7 +426,9 @@ class PROTOBUF_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CppFeatures final :
   static constexpr ParseTableT_ InternalGenerateParseTable_(
       const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL class_data);
   friend class ::google::protobuf::internal::TcParser;
+  #ifndef PROTOBUF_MESSAGE_GLOBALS
   static const ParseTableT_ _table_;
+  #endif
 
   friend class ::google::protobuf::MessageLite;
   friend class ::google::protobuf::Arena;

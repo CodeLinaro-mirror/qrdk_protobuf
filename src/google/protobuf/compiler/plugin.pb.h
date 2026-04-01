@@ -160,12 +160,11 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED Version final : publi
 
   template <typename = void>
   explicit constexpr Version(::google::protobuf::internal::ConstantInitialized,
-                                 const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
-                                     class_data);
+                           const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
+                               class_data);
 
   inline Version(const Version& from) : Version(nullptr, from) {}
-  inline Version(Version&& from) noexcept
-      : Version(nullptr, ::std::move(from)) {}
+  inline Version(Version&& from) noexcept : Version(nullptr, ::std::move(from)) {}
   inline Version& operator=(const Version& from) {
     CopyFrom(from);
     return *this;
@@ -178,6 +177,9 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED Version final : publi
       CopyFrom(from);
     }
     return *this;
+  }
+  static constexpr const void* PROTOBUF_NONNULL internal_message_globals() {
+    return &_Version_globals_;
   }
 
   [[nodiscard]] inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
@@ -200,8 +202,7 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED Version final : publi
     return default_instance().GetMetadata().reflection;
   }
   [[nodiscard]] static const Version& default_instance() {
-    return *::google::protobuf::internal::MessageGlobalsBase::ToDefaultInstance<Version>(
-        &_Version_globals_);
+    return *::google::protobuf::internal::MessageGlobalsBase::ToDefaultInstance<Version>(&_Version_globals_);
   }
   static constexpr int kIndexInFileMessages = 0;
   friend void swap(Version& a, Version& b) { a.Swap(&b); }
@@ -287,7 +288,8 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED Version final : publi
 
  public:
   static constexpr auto InternalGenerateClassData_(
-      const MessageLite& prototype);
+      const MessageLite& prototype,
+      const ::google::protobuf::internal::TcParseTableBase* PROTOBUF_NULLABLE tc_table = nullptr);
 
   [[nodiscard]] ::google::protobuf::Metadata GetMetadata() const;
   // nested types ----------------------------------------------------
@@ -362,7 +364,9 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED Version final : publi
   static constexpr ParseTableT_ InternalGenerateParseTable_(
       const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL class_data);
   friend class ::google::protobuf::internal::TcParser;
+  #ifndef PROTOBUF_MESSAGE_GLOBALS
   static const ParseTableT_ _table_;
+  #endif
 
   friend class ::google::protobuf::MessageLite;
   friend class ::google::protobuf::Arena;
@@ -409,12 +413,11 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CodeGeneratorResponse
 
   template <typename = void>
   explicit constexpr CodeGeneratorResponse_File(::google::protobuf::internal::ConstantInitialized,
-                                 const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
-                                     class_data);
+                           const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
+                               class_data);
 
   inline CodeGeneratorResponse_File(const CodeGeneratorResponse_File& from) : CodeGeneratorResponse_File(nullptr, from) {}
-  inline CodeGeneratorResponse_File(CodeGeneratorResponse_File&& from) noexcept
-      : CodeGeneratorResponse_File(nullptr, ::std::move(from)) {}
+  inline CodeGeneratorResponse_File(CodeGeneratorResponse_File&& from) noexcept : CodeGeneratorResponse_File(nullptr, ::std::move(from)) {}
   inline CodeGeneratorResponse_File& operator=(const CodeGeneratorResponse_File& from) {
     CopyFrom(from);
     return *this;
@@ -427,6 +430,9 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CodeGeneratorResponse
       CopyFrom(from);
     }
     return *this;
+  }
+  static constexpr const void* PROTOBUF_NONNULL internal_message_globals() {
+    return &_CodeGeneratorResponse_File_globals_;
   }
 
   [[nodiscard]] inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
@@ -449,8 +455,7 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CodeGeneratorResponse
     return default_instance().GetMetadata().reflection;
   }
   [[nodiscard]] static const CodeGeneratorResponse_File& default_instance() {
-    return *::google::protobuf::internal::MessageGlobalsBase::ToDefaultInstance<CodeGeneratorResponse_File>(
-        &_CodeGeneratorResponse_File_globals_);
+    return *::google::protobuf::internal::MessageGlobalsBase::ToDefaultInstance<CodeGeneratorResponse_File>(&_CodeGeneratorResponse_File_globals_);
   }
   static constexpr int kIndexInFileMessages = 2;
   friend void swap(CodeGeneratorResponse_File& a, CodeGeneratorResponse_File& b) { a.Swap(&b); }
@@ -536,7 +541,8 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CodeGeneratorResponse
 
  public:
   static constexpr auto InternalGenerateClassData_(
-      const MessageLite& prototype);
+      const MessageLite& prototype,
+      const ::google::protobuf::internal::TcParseTableBase* PROTOBUF_NULLABLE tc_table = nullptr);
 
   [[nodiscard]] ::google::protobuf::Metadata GetMetadata() const;
   // nested types ----------------------------------------------------
@@ -625,7 +631,9 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CodeGeneratorResponse
   static constexpr ParseTableT_ InternalGenerateParseTable_(
       const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL class_data);
   friend class ::google::protobuf::internal::TcParser;
+  #ifndef PROTOBUF_MESSAGE_GLOBALS
   static const ParseTableT_ _table_;
+  #endif
 
   friend class ::google::protobuf::MessageLite;
   friend class ::google::protobuf::Arena;
@@ -672,12 +680,11 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CodeGeneratorResponse
 
   template <typename = void>
   explicit constexpr CodeGeneratorResponse(::google::protobuf::internal::ConstantInitialized,
-                                 const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
-                                     class_data);
+                           const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
+                               class_data);
 
   inline CodeGeneratorResponse(const CodeGeneratorResponse& from) : CodeGeneratorResponse(nullptr, from) {}
-  inline CodeGeneratorResponse(CodeGeneratorResponse&& from) noexcept
-      : CodeGeneratorResponse(nullptr, ::std::move(from)) {}
+  inline CodeGeneratorResponse(CodeGeneratorResponse&& from) noexcept : CodeGeneratorResponse(nullptr, ::std::move(from)) {}
   inline CodeGeneratorResponse& operator=(const CodeGeneratorResponse& from) {
     CopyFrom(from);
     return *this;
@@ -690,6 +697,9 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CodeGeneratorResponse
       CopyFrom(from);
     }
     return *this;
+  }
+  static constexpr const void* PROTOBUF_NONNULL internal_message_globals() {
+    return &_CodeGeneratorResponse_globals_;
   }
 
   [[nodiscard]] inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
@@ -712,8 +722,7 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CodeGeneratorResponse
     return default_instance().GetMetadata().reflection;
   }
   [[nodiscard]] static const CodeGeneratorResponse& default_instance() {
-    return *::google::protobuf::internal::MessageGlobalsBase::ToDefaultInstance<CodeGeneratorResponse>(
-        &_CodeGeneratorResponse_globals_);
+    return *::google::protobuf::internal::MessageGlobalsBase::ToDefaultInstance<CodeGeneratorResponse>(&_CodeGeneratorResponse_globals_);
   }
   static constexpr int kIndexInFileMessages = 3;
   friend void swap(CodeGeneratorResponse& a, CodeGeneratorResponse& b) { a.Swap(&b); }
@@ -799,7 +808,8 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CodeGeneratorResponse
 
  public:
   static constexpr auto InternalGenerateClassData_(
-      const MessageLite& prototype);
+      const MessageLite& prototype,
+      const ::google::protobuf::internal::TcParseTableBase* PROTOBUF_NULLABLE tc_table = nullptr);
 
   [[nodiscard]] ::google::protobuf::Metadata GetMetadata() const;
   // nested types ----------------------------------------------------
@@ -918,7 +928,9 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CodeGeneratorResponse
   static constexpr ParseTableT_ InternalGenerateParseTable_(
       const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL class_data);
   friend class ::google::protobuf::internal::TcParser;
+  #ifndef PROTOBUF_MESSAGE_GLOBALS
   static const ParseTableT_ _table_;
+  #endif
 
   friend class ::google::protobuf::MessageLite;
   friend class ::google::protobuf::Arena;
@@ -966,12 +978,11 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CodeGeneratorRequest 
 
   template <typename = void>
   explicit constexpr CodeGeneratorRequest(::google::protobuf::internal::ConstantInitialized,
-                                 const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
-                                     class_data);
+                           const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
+                               class_data);
 
   inline CodeGeneratorRequest(const CodeGeneratorRequest& from) : CodeGeneratorRequest(nullptr, from) {}
-  inline CodeGeneratorRequest(CodeGeneratorRequest&& from) noexcept
-      : CodeGeneratorRequest(nullptr, ::std::move(from)) {}
+  inline CodeGeneratorRequest(CodeGeneratorRequest&& from) noexcept : CodeGeneratorRequest(nullptr, ::std::move(from)) {}
   inline CodeGeneratorRequest& operator=(const CodeGeneratorRequest& from) {
     CopyFrom(from);
     return *this;
@@ -984,6 +995,9 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CodeGeneratorRequest 
       CopyFrom(from);
     }
     return *this;
+  }
+  static constexpr const void* PROTOBUF_NONNULL internal_message_globals() {
+    return &_CodeGeneratorRequest_globals_;
   }
 
   [[nodiscard]] inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
@@ -1006,8 +1020,7 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CodeGeneratorRequest 
     return default_instance().GetMetadata().reflection;
   }
   [[nodiscard]] static const CodeGeneratorRequest& default_instance() {
-    return *::google::protobuf::internal::MessageGlobalsBase::ToDefaultInstance<CodeGeneratorRequest>(
-        &_CodeGeneratorRequest_globals_);
+    return *::google::protobuf::internal::MessageGlobalsBase::ToDefaultInstance<CodeGeneratorRequest>(&_CodeGeneratorRequest_globals_);
   }
   static constexpr int kIndexInFileMessages = 1;
   friend void swap(CodeGeneratorRequest& a, CodeGeneratorRequest& b) { a.Swap(&b); }
@@ -1098,7 +1111,8 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CodeGeneratorRequest 
 
  public:
   static constexpr auto InternalGenerateClassData_(
-      const MessageLite& prototype);
+      const MessageLite& prototype,
+      const ::google::protobuf::internal::TcParseTableBase* PROTOBUF_NULLABLE tc_table = nullptr);
 
   [[nodiscard]] ::google::protobuf::Metadata GetMetadata() const;
   // nested types ----------------------------------------------------
@@ -1223,7 +1237,9 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CodeGeneratorRequest 
   static constexpr ParseTableT_ InternalGenerateParseTable_(
       const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL class_data);
   friend class ::google::protobuf::internal::TcParser;
+  #ifndef PROTOBUF_MESSAGE_GLOBALS
   static const ParseTableT_ _table_;
+  #endif
 
   friend class ::google::protobuf::MessageLite;
   friend class ::google::protobuf::Arena;
