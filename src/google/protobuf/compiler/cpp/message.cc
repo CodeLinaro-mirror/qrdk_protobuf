@@ -1504,7 +1504,7 @@ void MessageGenerator::GenerateMapEntryClassDefinition(io::Printer* p) {
                                        class_data);
           explicit $classname$($pb$::Arena* $nullable$ arena);
           static constexpr const void* $nonnull$ internal_message_globals() {
-            return &_$classname$_globals_;
+            return &$globals$;
           }
 
           $decl_verify_func$;

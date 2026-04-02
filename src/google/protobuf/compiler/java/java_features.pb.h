@@ -63,13 +63,13 @@ enum JavaFeatures_Utf8Validation : int;
 PROTOC_EXPORT extern const uint32_t JavaFeatures_Utf8Validation_internal_data_[];
 class JavaFeatures;
 struct JavaFeaturesGlobalsTypeInternal;
-PROTOC_EXPORT extern JavaFeaturesGlobalsTypeInternal _JavaFeatures_globals_;
+PROTOC_EXPORT extern JavaFeaturesGlobalsTypeInternal JavaFeatures_globals_;
 #ifndef PROTOBUF_MESSAGE_GLOBALS
 PROTOC_EXPORT extern const ::google::protobuf::internal::ClassDataFull JavaFeatures_class_data_;
 #endif  // PROTOBUF_MESSAGE_GLOBALS
 class JavaFeatures_NestInFileClassFeature;
 struct JavaFeatures_NestInFileClassFeatureGlobalsTypeInternal;
-PROTOC_EXPORT extern JavaFeatures_NestInFileClassFeatureGlobalsTypeInternal _JavaFeatures_NestInFileClassFeature_globals_;
+PROTOC_EXPORT extern JavaFeatures_NestInFileClassFeatureGlobalsTypeInternal JavaFeatures_NestInFileClassFeature_globals_;
 #ifndef PROTOBUF_MESSAGE_GLOBALS
 PROTOC_EXPORT extern const ::google::protobuf::internal::ClassDataFull JavaFeatures_NestInFileClassFeature_class_data_;
 #endif  // PROTOBUF_MESSAGE_GLOBALS
@@ -231,7 +231,7 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED JavaFeatures_NestInFi
   }
   [[nodiscard]] static const JavaFeatures_NestInFileClassFeature& default_instance() {
     return *::google::protobuf::internal::MessageGlobalsBase::ToDefaultInstance<JavaFeatures_NestInFileClassFeature>(
-        &_JavaFeatures_NestInFileClassFeature_globals_);
+        &JavaFeatures_NestInFileClassFeature_globals_);
   }
   static constexpr int kIndexInFileMessages = 0;
   friend void swap(JavaFeatures_NestInFileClassFeature& a, JavaFeatures_NestInFileClassFeature& b) { a.Swap(&b); }
@@ -398,7 +398,7 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED JavaFeatures final : 
   }
   [[nodiscard]] static const JavaFeatures& default_instance() {
     return *::google::protobuf::internal::MessageGlobalsBase::ToDefaultInstance<JavaFeatures>(
-        &_JavaFeatures_globals_);
+        &JavaFeatures_globals_);
   }
   static constexpr int kIndexInFileMessages = 1;
   friend void swap(JavaFeatures& a, JavaFeatures& b) { a.Swap(&b); }
