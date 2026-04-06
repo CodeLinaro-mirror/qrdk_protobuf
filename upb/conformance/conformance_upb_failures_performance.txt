@@ -1,0 +1,2 @@
+Recommended.Proto2.ProtobufInput.EnforceDepthLimit.MessageSetExtension          # Should have failed to parse, but didn't.
+Recommended.Editions.ProtobufInput.EnforceDepthLimit.Map                       # Should have failed to parse, but didn't.
