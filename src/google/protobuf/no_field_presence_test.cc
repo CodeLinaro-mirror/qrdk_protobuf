@@ -116,6 +116,7 @@ void FillValues(TestAllTypes* m) {
   m->set_optional_nested_enum(TestAllTypes::BAZ);
   m->set_optional_foreign_enum(FOREIGN_BAZ);
   m->set_optional_string_piece("test");
+  m->set_optional_string_view("string view");
   m->mutable_optional_lazy_message()->set_bb(45);
   m->add_repeated_int32(100);
   m->add_repeated_int64(101);

@@ -83,6 +83,7 @@ def SetAllNonLazyFields(message):
   message.optional_cord = u'125'
   if hasattr(message, 'optional_bytes_cord'):
     message.optional_bytes_cord = b'optional bytes cord'
+  message.optional_string_view = u'optional view'
 
   #
   # Repeated fields.
@@ -258,6 +259,7 @@ def SetAllExtensions(message):
   extensions[pb2.optional_string_piece_extension] = u'124'
   extensions[pb2.optional_cord_extension] = u'125'
   extensions[pb2.optional_bytes_cord_extension] = b'optional bytes cord'
+  extensions[pb2.optional_string_view_extension] = u'optional view'
 
   #
   # Repeated fields.
@@ -435,6 +437,7 @@ def ExpectAllFieldsSet(test_case, message):
   test_case.assertTrue(message.HasField('optional_string_piece'))
   test_case.assertTrue(message.HasField('optional_cord'))
   test_case.assertTrue(message.HasField('optional_bytes_cord'))
+  test_case.assertTrue(message.HasField('optional_string_view'))
 
   test_case.assertEqual(101, message.optional_int32)
   test_case.assertEqual(102, message.optional_int64)

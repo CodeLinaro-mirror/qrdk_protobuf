@@ -70,6 +70,7 @@ message TestAllTypesProto2 {
 
   optional string optional_string_piece = 24 [ctype = STRING_PIECE];
   optional string optional_cord = 25 [ctype = CORD];
+  optional string optional_string_view = 29;
 
   optional TestAllTypesProto2 recursive_message = 27;
 

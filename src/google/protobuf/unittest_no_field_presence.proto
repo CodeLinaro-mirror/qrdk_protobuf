@@ -64,6 +64,9 @@ message TestAllTypes {
 
   string optional_string_piece = 24;
   string optional_cord = 25 [features.(pb.cpp).string_type = CORD];
+  string optional_string_view = 29 [
+      features.(pb.cpp).string_type = VIEW
+  ];
 
   NestedMessage optional_lazy_message = 30 [lazy = true];
 

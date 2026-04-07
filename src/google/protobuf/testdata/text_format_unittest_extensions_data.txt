@@ -39,6 +39,7 @@
 [proto2_unittest.optional_unverified_lazy_message_extension] {
   bb: 128
 }
+[proto2_unittest.optional_string_view_extension]: "optional view"
 [proto2_unittest.repeated_int32_extension]: 201
 [proto2_unittest.repeated_int32_extension]: 301
 [proto2_unittest.repeated_int64_extension]: 202

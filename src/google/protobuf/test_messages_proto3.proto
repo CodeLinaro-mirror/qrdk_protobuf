@@ -90,6 +90,7 @@ message TestAllTypesProto3 {
 
   string optional_string_piece = 24 [ctype = STRING_PIECE];
   string optional_cord = 25 [ctype = CORD];
+  string optional_string_view = 29;
 
   TestAllTypesProto3 recursive_message = 27;
 

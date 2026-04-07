@@ -175,7 +175,7 @@ inline const FieldDescriptor* TestUtil::ReflectionTester::F(
   } else {
     result = base_descriptor_->FindFieldByName(name);
   }
-  ABSL_CHECK(result != nullptr);
+  ABSL_CHECK(result != nullptr) << base_descriptor_->name() << "::" << name;
   return result;
 }
 
@@ -222,6 +222,7 @@ inline void TestUtil::ReflectionTester::SetAllFieldsViaReflection(
   reflection->SetString(message, F("optional_cord"), "125");
   reflection->SetString(message, F("optional_bytes_cord"),
                         "optional bytes cord");
+  reflection->SetString(message, F("optional_string_view"), "optional view");
 
   sub_message =
       reflection->MutableMessage(message, F("optional_public_import_message"));
@@ -491,6 +492,7 @@ inline void TestUtil::ReflectionTester::ExpectAllFieldsSetViaReflection1(
   EXPECT_TRUE(reflection->HasField(message, F("optional_string_piece")));
   EXPECT_TRUE(reflection->HasField(message, F("optional_cord")));
   EXPECT_TRUE(reflection->HasField(message, F("optional_bytes_cord")));
+  EXPECT_TRUE(reflection->HasField(message, F("optional_string_view")));
 
   EXPECT_EQ(101, reflection->GetInt32(message, F("optional_int32")));
   EXPECT_EQ(102, reflection->GetInt64(message, F("optional_int64")));
@@ -559,6 +561,9 @@ inline void TestUtil::ReflectionTester::ExpectAllFieldsSetViaReflection1(
                                            &scratch));
   EXPECT_EQ("optional bytes cord",
             reflection->GetCord(message, F("optional_bytes_cord")));
+
+  EXPECT_EQ("optional view",
+            reflection->GetString(message, F("optional_string_view")));
 
   EXPECT_TRUE(reflection->HasField(message, F("oneof_bytes")));
   EXPECT_EQ("604", reflection->GetString(message, F("oneof_bytes")));
@@ -921,6 +926,7 @@ inline void TestUtil::ReflectionTester::ExpectClearViaReflection(
   EXPECT_FALSE(reflection->HasField(message, F("optional_string_piece")));
   EXPECT_FALSE(reflection->HasField(message, F("optional_cord")));
   EXPECT_FALSE(reflection->HasField(message, F("optional_bytes_cord")));
+  EXPECT_FALSE(reflection->HasField(message, F("optional_string_view")));
 
   // Optional fields without defaults are set to zero or something like it.
   EXPECT_EQ(0, reflection->GetInt32(message, F("optional_int32")));
@@ -991,6 +997,8 @@ inline void TestUtil::ReflectionTester::ExpectClearViaReflection(
   EXPECT_EQ("", reflection->GetStringReference(
                     message, F("optional_bytes_cord"), &scratch));
   EXPECT_EQ("", reflection->GetCord(message, F("optional_bytes_cord")));
+
+  EXPECT_EQ("", reflection->GetString(message, F("optional_string_view")));
 
   // Repeated fields are empty.
   EXPECT_EQ(0, reflection->FieldSize(message, F("repeated_int32")));
@@ -1305,6 +1313,7 @@ struct TestUtilTraits;
   X(ns, optional_string_piece_extension);             \
   X(ns, optional_cord_extension);                     \
   X(ns, optional_bytes_cord_extension);               \
+  X(ns, optional_string_view_extension);              \
   X(ns, optional_public_import_message_extension);    \
   X(ns, optional_lazy_message_extension);             \
   X(ns, optional_unverified_lazy_message_extension);  \
@@ -1611,6 +1620,7 @@ void SetOptionalFields(TestAllTypes* message) {
       "125");
 #endif  // !PROTOBUF_TEST_NO_DESCRIPTORS
   message->set_optional_bytes_cord("optional bytes cord");
+  message->set_optional_string_view("optional view");
 }
 
 // -------------------------------------------------------------------
@@ -1825,6 +1835,7 @@ void ExpectAllFieldsSet(const TestAllTypes& message) {
   EXPECT_TRUE(message.has_optional_cord());
 #endif
   EXPECT_TRUE(message.has_optional_bytes_cord());
+  EXPECT_TRUE(message.has_optional_string_view());
 
   EXPECT_EQ(101, message.optional_int32());
   EXPECT_EQ(102, message.optional_int64());
@@ -1857,6 +1868,7 @@ void ExpectAllFieldsSet(const TestAllTypes& message) {
             message.optional_import_enum());
 
   EXPECT_EQ("optional bytes cord", message.optional_bytes_cord());
+  EXPECT_EQ("optional view", message.optional_string_view());
 
   // -----------------------------------------------------------------
 
@@ -2036,6 +2048,7 @@ void ExpectClear(const TestAllTypes& message) {
   EXPECT_FALSE(message.has_optional_string_piece());
   EXPECT_FALSE(message.has_optional_cord());
   EXPECT_FALSE(message.has_optional_bytes_cord());
+  EXPECT_FALSE(message.has_optional_string_view());
 
   // Optional fields without defaults are set to zero or something like it.
   EXPECT_EQ(0, message.optional_int32());
@@ -2079,6 +2092,7 @@ void ExpectClear(const TestAllTypes& message) {
             message.optional_import_enum());
 
   EXPECT_EQ("", message.optional_bytes_cord());
+  EXPECT_EQ("", message.optional_string_view());
 
   // Repeated fields are empty.
   EXPECT_EQ(0, message.repeated_int32_size());
@@ -2709,6 +2723,8 @@ void SetAllExtensions(TestAllExtensions* message) {
   message->SetExtension(Traits::optional_cord_extension, "125");
   message->SetExtension(Traits::optional_bytes_cord_extension,
                         "optional bytes cord");
+  message->SetExtension(Traits::optional_string_view_extension,
+                        "optional view");
 
   message->MutableExtension(Traits::optional_public_import_message_extension)
       ->set_e(126);
@@ -2917,6 +2933,7 @@ void ExpectAllExtensionsSet(const TestAllExtensions& message) {
   EXPECT_TRUE(message.HasExtension(Traits::optional_string_piece_extension));
   EXPECT_TRUE(message.HasExtension(Traits::optional_cord_extension));
   EXPECT_TRUE(message.HasExtension(Traits::optional_bytes_cord_extension));
+  EXPECT_TRUE(message.HasExtension(Traits::optional_string_view_extension));
 
   EXPECT_EQ(101, message.GetExtension(Traits::optional_int32_extension));
   EXPECT_EQ(102, message.GetExtension(Traits::optional_int64_extension));
@@ -2956,6 +2973,8 @@ void ExpectAllExtensionsSet(const TestAllExtensions& message) {
   EXPECT_EQ("125", message.GetExtension(Traits::optional_cord_extension));
   EXPECT_EQ("optional bytes cord",
             message.GetExtension(Traits::optional_bytes_cord_extension));
+  EXPECT_EQ("optional view",
+            message.GetExtension(Traits::optional_string_view_extension));
   EXPECT_EQ(
       126,
       message.GetExtension(Traits::optional_public_import_message_extension)
@@ -3190,6 +3209,7 @@ void ExpectExtensionsClear(const TestAllExtensions& message) {
   EXPECT_FALSE(message.HasExtension(Traits::optional_string_piece_extension));
   EXPECT_FALSE(message.HasExtension(Traits::optional_cord_extension));
   EXPECT_FALSE(message.HasExtension(Traits::optional_bytes_cord_extension));
+  EXPECT_FALSE(message.HasExtension(Traits::optional_string_view_extension));
 
   // Optional fields without defaults are set to zero or something like it.
   EXPECT_EQ(0, message.GetExtension(Traits::optional_int32_extension));
@@ -3253,6 +3273,7 @@ void ExpectExtensionsClear(const TestAllExtensions& message) {
   EXPECT_EQ("", message.GetExtension(Traits::optional_string_piece_extension));
   EXPECT_EQ("", message.GetExtension(Traits::optional_cord_extension));
   EXPECT_EQ("", message.GetExtension(Traits::optional_bytes_cord_extension));
+  EXPECT_EQ("", message.GetExtension(Traits::optional_string_view_extension));
 
   // Repeated fields are empty.
   EXPECT_EQ(0, message.ExtensionSize(Traits::repeated_int32_extension));

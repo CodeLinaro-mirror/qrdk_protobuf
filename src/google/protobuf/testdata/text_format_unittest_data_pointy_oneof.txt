@@ -39,6 +39,7 @@ optional_lazy_message <
 optional_unverified_lazy_message <
   bb: 128
 >
+optional_string_view: "optional view"
 repeated_int32: 201
 repeated_int32: 301
 repeated_int64: 202

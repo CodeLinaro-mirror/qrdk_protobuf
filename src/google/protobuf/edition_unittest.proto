@@ -91,6 +91,9 @@ message TestAllTypes {
   string optional_string_piece = 24;
   string optional_cord = 25 [features.(pb.cpp).string_type=CORD];
   bytes optional_bytes_cord = 86 [features.(pb.cpp).string_type=CORD];
+  string optional_string_view = 29 [
+      features.(pb.cpp).string_type = VIEW
+  ];
 
   // Defined in unittest_import_public.proto
   proto2_unittest_import.PublicImportMessage
@@ -271,6 +274,7 @@ extend TestAllExtensions {
   // ctype=CORD option back after it is supported.
   string optional_cord_extension = 25;
   bytes optional_bytes_cord_extension = 86;
+  string optional_string_view_extension = 29;
 
   proto2_unittest_import.PublicImportMessage
     optional_public_import_message_extension = 26;
