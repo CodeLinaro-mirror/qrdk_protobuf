@@ -192,9 +192,9 @@ PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_EXPORT
     const
     #endif
      CppFeaturesGlobalsTypeInternal CppFeatures_globals_
-        #ifdef PROTOBUF_MESSAGE_GLOBALS
+        #if defined(PROTOBUF_MESSAGE_GLOBALS) && !defined(__powerpc__)
         ABSL_ATTRIBUTE_SECTION_VARIABLE(.data.rel.ro)
-        #endif  // PROTOBUF_MESSAGE_GLOBALS
+        #endif
         ;
 #if defined(PROTOBUF_CUSTOM_VTABLE)
 namespace {

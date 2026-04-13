@@ -5649,9 +5649,9 @@ void MessageGenerator::GenerateSourceDefaultInstance(io::Printer* p) {
 
                  p->Emit(
                      R"cc(
-#ifdef PROTOBUF_MESSAGE_GLOBALS
+#if defined(PROTOBUF_MESSAGE_GLOBALS) && !defined(__powerpc__)
                        ABSL_ATTRIBUTE_SECTION_VARIABLE(.data.rel.ro)
-#endif  // PROTOBUF_MESSAGE_GLOBALS
+#endif
                      )cc");
                }})
               .WithSuffix(""),

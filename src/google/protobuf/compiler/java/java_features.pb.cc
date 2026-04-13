@@ -153,9 +153,9 @@ PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOC_EXPORT
     const
     #endif
      JavaFeatures_NestInFileClassFeatureGlobalsTypeInternal JavaFeatures_NestInFileClassFeature_globals_
-        #ifdef PROTOBUF_MESSAGE_GLOBALS
+        #if defined(PROTOBUF_MESSAGE_GLOBALS) && !defined(__powerpc__)
         ABSL_ATTRIBUTE_SECTION_VARIABLE(.data.rel.ro)
-        #endif  // PROTOBUF_MESSAGE_GLOBALS
+        #endif
         ;
 #if defined(PROTOBUF_CUSTOM_VTABLE)
 namespace {
@@ -335,9 +335,9 @@ PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOC_EXPORT
     const
     #endif
      JavaFeaturesGlobalsTypeInternal JavaFeatures_globals_
-        #ifdef PROTOBUF_MESSAGE_GLOBALS
+        #if defined(PROTOBUF_MESSAGE_GLOBALS) && !defined(__powerpc__)
         ABSL_ATTRIBUTE_SECTION_VARIABLE(.data.rel.ro)
-        #endif  // PROTOBUF_MESSAGE_GLOBALS
+        #endif
         ;
 #if defined(PROTOBUF_CUSTOM_VTABLE)
 namespace {
