@@ -34,8 +34,8 @@ void LogIndexOutOfBounds(int index, int size) {
   ABSL_DLOG(FATAL) << "Index " << index << " out of bounds " << size;
 }
 
-void LogIndexOutOfBoundsAndAbort(int64_t index, int64_t size,
-                                 BoundsCheckMessageType type) {
+[[noreturn]] void LogIndexOutOfBoundsAndAbort(int64_t index, int64_t size,
+                                              BoundsCheckMessageType type) {
   switch (type) {
     case BoundsCheckMessageType::kIndex:
       ABSL_LOG(FATAL) << "Index (" << index
