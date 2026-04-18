@@ -258,12 +258,13 @@ bool DescriptorPoolExtensionFinder::Find(int number, ExtensionInfo* output) {
     output->is_packed = extension->is_packed();
     output->descriptor = extension;
     if (extension->cpp_type() == FieldDescriptor::CPPTYPE_MESSAGE) {
-      output->message_info.prototype =
-          factory_->GetPrototype(extension->message_type());
-      output->message_info.tc_table =
-          output->message_info.prototype->GetTcParseTable();
-      ABSL_CHECK(output->message_info.prototype != nullptr)
+      output->message_info = ExtensionInfo::MessageInfo::Create(
+          factory_->GetPrototype(extension->message_type()));
+      ABSL_CHECK_NE(output->message_info.GetPrototype(), nullptr)
           << "Extension factory's GetPrototype() returned nullptr; extension: "
+          << extension->full_name();
+      ABSL_CHECK_NE(output->message_info.GetTcTable(), nullptr)
+          << "Extension factory's GetTcTable() returned nullptr; extension: "
           << extension->full_name();
 
     } else if (extension->cpp_type() == FieldDescriptor::CPPTYPE_ENUM) {

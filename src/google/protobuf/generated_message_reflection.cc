@@ -3823,6 +3823,17 @@ const internal::TcParseTableBase* Reflection::CreateTcParseTable() const {
                 byte_size)
       << "message = " << descriptor_->full_name();
 
+#ifdef PROTOBUF_MESSAGE_GLOBALS
+  // DynamicMessage's parse table is lazily created and its class data should be
+  // updated to point to the parse table.
+  ABSL_CHECK_NE(message_factory_, nullptr);
+  const MessageLite* prototype = message_factory_->GetPrototype(descriptor_);
+  // const_cast is unfortunate but acceptable as we own the type.
+  auto* mutable_globals = MessageGlobalsBase::FromDefaultInstance(
+      const_cast<MessageLite*>(prototype));
+  ABSL_DCHECK(!mutable_globals->GetClassData()->full().is_lite);
+  mutable_globals->SetTcParseTableForDynamicMessage(res);
+#endif
   return res;
 }
 

@@ -574,6 +574,7 @@ struct PROTOBUF_EXPORT ClassDataFull : ClassData {
   }
 
   constexpr const ClassData* base() const { return this; }
+  ClassData* mutable_base() { return this; }
 
   // Accessors for reflection related data (ClassDataFull only).
   const Reflection* reflection() const { return reflection_data()->reflection; }
@@ -664,6 +665,11 @@ struct MessageGlobalsBase {
         reinterpret_cast<const char*>(default_instance) - OffsetToDefault());
   }
 
+  static MessageGlobalsBase* FromDefaultInstance(void* default_instance) {
+    return reinterpret_cast<MessageGlobalsBase*>(
+        reinterpret_cast<char*>(default_instance) - OffsetToDefault());
+  }
+
   static constexpr const ClassData* GetClassData(const void* globals) {
     return static_cast<const MessageGlobalsBase*>(globals)->class_data.base();
   }
@@ -676,6 +682,11 @@ struct MessageGlobalsBase {
     const auto* globals = static_cast<const MessageGlobalsBase*>(g);
     ABSL_DCHECK_NE(globals, nullptr);
     return globals->class_data.tc_table;
+  }
+
+  void SetTcParseTableForDynamicMessage(
+      const internal::TcParseTableBase* tc_table) {
+    class_data.mutable_base()->tc_table = tc_table;
   }
 
   // It also aliases to ClassDataLite.

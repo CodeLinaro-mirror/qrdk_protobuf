@@ -29,6 +29,7 @@
 #include <vector>
 
 #include "absl/log/absl_log.h"
+#include "google/protobuf/generated_message_util.h"
 
 #include "google/protobuf/stubs/common.h"
 #include "absl/base/casts.h"
@@ -167,18 +168,53 @@ struct ExtensionInfo {
   };
 
   struct MessageInfo {
+#ifdef PROTOBUF_MESSAGE_GLOBALS
+    const internal::MessageGlobalsBase* globals = nullptr;
+#else
     const MessageLite* prototype = nullptr;
-    // The TcParse table used for this object.
-    // Never null. (except in platforms that don't constant initialize default
-    // instances)
+    // The TcParse table used for this object. Never null. (except in platforms
+    // that don't constant initialize default instances)
     const internal::TcParseTableBase* tc_table = nullptr;
+#endif
+
+    // Create from prototype
+    static MessageInfo Create(const MessageLite* prototype) {
+      const internal::TcParseTableBase* tc_table =
+          internal::PrivateAccess::GetTcParseTable(prototype);
+#ifdef PROTOBUF_MESSAGE_GLOBALS
+      ABSL_DCHECK_NE(tc_table, nullptr);
+      return {internal::MessageGlobalsBase::FromDefaultInstance(prototype)};
+#else
+      return {prototype, tc_table};
+#endif
+    }
+
+    const MessageLite* GetPrototype() const {
+#ifdef PROTOBUF_MESSAGE_GLOBALS
+      return internal::MessageGlobalsBase::ToDefaultInstance(globals);
+#else
+      return prototype;
+#endif
+    }
+
+    const internal::TcParseTableBase* GetTcTable() const {
+#ifdef PROTOBUF_MESSAGE_GLOBALS
+      return internal::MessageGlobalsBase::ToParseTableBase(globals);
+#else
+      return tc_table;
+#endif
+    }
 
     const ClassData* GetClassData() const {
+#ifdef PROTOBUF_MESSAGE_GLOBALS
+      return internal::MessageGlobalsBase::GetClassData(globals);
+#else  // !PROTOBUF_MESSAGE_GLOBALS
 #ifdef PROTOBUF_CONSTINIT_DEFAULT_INSTANCES
       return tc_table->class_data;
 #else
       return google::protobuf::internal::GetClassData(*prototype);
 #endif
+#endif  // !PROTOBUF_MESSAGE_GLOBALS
     }
   };
 

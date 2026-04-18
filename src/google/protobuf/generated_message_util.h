@@ -425,6 +425,11 @@ struct PrivateAccess {
     return T::InternalGenerateParseTable_(class_data);
   }
 
+  inline static const internal::TcParseTableBase* GetTcParseTable(
+      const MessageLite* msg) {
+    return msg->GetTcParseTable();
+  }
+
   static internal::ExtensionSet* GetExtensionSet(MessageLite* msg);
   static const internal::ExtensionSet* GetExtensionSet(const MessageLite* msg);
 
