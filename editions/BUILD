@@ -401,11 +401,24 @@ cc_proto_library(
     deps = [":test_editions_2024_default_features_proto"],
 )
 
+proto_library(
+    name = "test_editions_2026_default_features_proto",
+    testonly = True,
+    srcs = ["input/test_editions_2026_default_features.proto"],
+)
+
+cc_proto_library(
+    name = "test_editions_2026_default_features_cc_proto",
+    testonly = True,
+    deps = [":test_editions_2026_default_features_proto"],
+)
+
 cc_test(
     name = "generated_files_test",
     srcs = ["generated_files_test.cc"],
     deps = [
         ":test_editions_2024_default_features_cc_proto",
+        ":test_editions_2026_default_features_cc_proto",
         ":test_editions_default_features_cc_proto",
         ":test_messages_proto2_editions_cc_proto",
         ":test_messages_proto3_editions_cc_proto",
