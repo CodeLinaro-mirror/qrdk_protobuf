@@ -164,6 +164,35 @@ UPB_INLINE bool upb_tabent_isempty(const upb_tabent* e) {
   return val == 0;
 }
 
+UPB_INLINE bool upb_tabent_hasnext(const upb_tabent* e) {
+  UPB_ASSERT(!upb_tabent_isempty(e));
+  return e->next != NULL;
+}
+
+UPB_INLINE void upb_tabent_clearnext(upb_tabent* e) {
+  e->next = NULL;
+  UPB_ASSERT(!upb_tabent_hasnext(e));
+}
+
+UPB_INLINE void upb_tabent_clear(upb_tabent* e) {
+  memset(&e->key, 0, sizeof(e->key));
+  e->next = NULL;
+  UPB_ASSERT(upb_tabent_isempty(e));
+}
+
+UPB_INLINE const upb_tabent* upb_tabent_next(const upb_tabent* e) {
+  UPB_ASSERT(!upb_tabent_isempty(e));
+  UPB_ASSERT(upb_tabent_hasnext(e));
+  return e->next;
+}
+
+UPB_INLINE void upb_tabent_setnext(upb_tabent* e, const upb_tabent* next) {
+  UPB_ASSERT(next != NULL);
+  UPB_ASSERT(next != e);
+  e->next = next;
+  UPB_ASSERT(upb_tabent_hasnext(e));
+}
+
 uint32_t _upb_Hash(const void* p, size_t n, uint64_t seed);
 
 #ifdef __cplusplus
