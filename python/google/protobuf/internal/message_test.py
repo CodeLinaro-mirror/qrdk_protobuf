@@ -621,6 +621,27 @@ class MessageTest(unittest.TestCase):
         [4, 3, 2, 1], [m.bb for m in msg.repeated_nested_message[::-1]]
     )
 
+  @unittest.skipIf(
+      api_implementation.Type() == 'python',
+      'Only upb reifies the child and payload fields during sort()',
+  )
+  @unittest.skipIf(
+      api_implementation.Type() == 'cpp',
+      'Only upb reifies the child and payload fields during sort()',
+  )
+  @unittest.skipIf(
+      api_implementation.Type() == 'upb',
+      'Needs to wait for a breaking change release in OSS'
+  )
+  def testSortEmptyRepeatedReifies(self, message_module):
+    message = message_module.NestedTestAllTypes()
+    self.assertFalse(message.HasField('child'))
+    self.assertFalse(message.HasField('payload'))
+    message.child.repeated_child.sort()
+    message.payload.repeated_int32.sort()
+    self.assertTrue(message.HasField('child'))
+    self.assertTrue(message.HasField('payload'))
+
   def testSortEmptyRepeated(self, message_module):
     message = message_module.NestedTestAllTypes()
     self.assertFalse(message.HasField('child'))

@@ -16,6 +16,9 @@
 #include "upb/reflection/def.h"
 #include "upb/util/def_to_proto.h"
 
+// Must be last.
+#include "upb/port/def.inc"
+
 // -----------------------------------------------------------------------------
 // DescriptorBase
 // -----------------------------------------------------------------------------
@@ -132,6 +135,9 @@ static PyObject* PyUpb_DescriptorBase_GetCached(PyObject** cached,
       upb_Message_ClearFieldByDef(opts2, field);
     }
 
+#if UPB_FUTURE_FREEZE_OPTIONS
+    upb_Message_Freeze(opts2, opts2_layout);
+#endif
     *cached = PyUpb_Message_Get(opts2, m, py_arena);
     Py_DECREF(py_arena);
   }
@@ -1909,3 +1915,5 @@ bool PyUpb_InitDescriptor(PyObject* m) {
          PyUpb_SetIntAttr(fd, "CPPTYPE_BYTES", CPPTYPE_STRING) &&
          PyUpb_SetIntAttr(fd, "CPPTYPE_MESSAGE", CPPTYPE_MESSAGE);
 }
+
+#include "upb/port/undef.inc"
