@@ -25,6 +25,12 @@
 // Must be included last
 #include "google/protobuf/port_def.inc"
 
+#if !defined(PROTO2_OPENSOURCE)
+#if defined(PROTOBUF_INTERNAL_BOUNDS_CHECK_MODE_ABORT)
+extern "C" bool kVersionStampBuildHasHardeningProtobuf = true;
+#endif  // defined(PROTOBUF_INTERNAL_BOUNDS_CHECK_MODE_ABORT)
+#endif  // !defined(PROTO2_OPENSOURCE)
+
 namespace google {
 namespace protobuf {
 namespace internal {
