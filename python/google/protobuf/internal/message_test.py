@@ -809,6 +809,23 @@ class MessageTest(unittest.TestCase):
     with self.assertRaises(TypeError):
       hash(m.repeated_nested_message)
 
+  def testRepeatedCompositeListComparison(self, message_module):
+    msg = message_module.TestAllTypes()
+    msg.repeated_nested_message.add(bb=1)
+
+    # This is an unfortunate behavior difference. We should pick one of these
+    # behaviors and implement it in all implementations.
+    if api_implementation.Type() == 'upb':
+      self.assertEqual(
+          msg.repeated_nested_message,
+          [message_module.TestAllTypes.NestedMessage(bb=1)],
+      )
+    elif api_implementation.Type() in ['cpp', 'python']:
+      with self.assertRaises(TypeError):
+        _ = msg.repeated_nested_message == [
+            message_module.TestAllTypes.NestedMessage(bb=1)
+        ]
+
   def testRepeatedFieldInsideNestedMessage(self, message_module):
     m = message_module.NestedTestAllTypes()
     m.payload.repeated_int32.extend([])
