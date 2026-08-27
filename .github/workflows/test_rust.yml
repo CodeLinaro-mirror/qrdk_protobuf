@@ -24,7 +24,7 @@ jobs:
 
         include:
           - targets: "//rust/... //src/google/protobuf/compiler/rust/..."
-          - image: "us-docker.pkg.dev/protobuf-build/containers/common/linux/bazel:9.2.0-4d8e80ef93b0219fb907af9dd4596b92946995d8"
+          - image: "us-docker.pkg.dev/protobuf-build/containers/test/linux/monolithic:latest-pr199"
           - bazel_cmd: "test"
 
           # Override cases with custom images
@@ -48,8 +48,8 @@ jobs:
           image: ${{ matrix.image }}
           credentials: ${{ secrets.GAR_SERVICE_ACCOUNT }}
           bazel-cache: rust_linux
-          bazel: >-
-            ${{ matrix.bazel_cmd }} --crosstool_top=//toolchain:clang_suite --@rules_rust//rust/settings:experimental_use_cc_common_link=True
+          bash: >-
+            bazel ${{ matrix.bazel_cmd }} --crosstool_top=//toolchain:clang_suite --@rules_rust//rust/settings:experimental_use_cc_common_link=True
             ${{ matrix.targets }} ${{ matrix.config.flags }}
 
   windows:

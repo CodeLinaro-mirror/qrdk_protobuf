@@ -17,6 +17,7 @@ module(
 bazel_dep(name = "apple_support", version = "2.3.0", repo_name = "build_bazel_apple_support")
 
 # Unused but must be pinned to avoid old broken versions
+bazel_dep(name = "rules_apple", version = "3.19.1", repo_name = "build_bazel_rules_apple")
 bazel_dep(name = "rules_proto", version = "7.1.0")
 
 # protoc dependencies
