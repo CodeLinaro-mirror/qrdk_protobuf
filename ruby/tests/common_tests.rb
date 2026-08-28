@@ -342,6 +342,36 @@ module CommonTests
     end
   end
 
+  def test_rptfield_eq
+    l1 = Google::Protobuf::RepeatedField.new(:int32)
+    l2 = Google::Protobuf::RepeatedField.new(:int32)
+    assert_equal l1, l2
+
+    l3 = Google::Protobuf::RepeatedField.new(:int64)
+    refute_equal l1, l3
+
+    l1.push 1
+    l2.push 1
+    assert_equal l1, l2
+
+    l3.push 1
+    refute_equal l1, l3
+
+    msg1 = Google::Protobuf::RepeatedField.new(:message, proto_module::TestMessage)
+    msg2 = Google::Protobuf::RepeatedField.new(:message, proto_module::TestMessage2)
+    refute_equal msg1, msg2
+
+    msg1.push proto_module::TestMessage.new
+    msg2.push proto_module::TestMessage2.new
+    refute_equal msg1, msg2
+    refute_equal l1, msg1
+
+    assert_equal [], Google::Protobuf::RepeatedField.new(:int32)
+    assert_equal Google::Protobuf::RepeatedField.new(:int32), []
+    assert_equal [], Google::Protobuf::RepeatedField.new(:int64)
+    assert_equal Google::Protobuf::RepeatedField.new(:int64), []
+  end
+
   def test_rptfield_array_ducktyping
     l = Google::Protobuf::RepeatedField.new(:int32)
     length_methods = %w(count length size)

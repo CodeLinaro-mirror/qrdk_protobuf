@@ -221,7 +221,7 @@ module Google
       def ==(other)
         return true if other.object_id == object_id
         if other.is_a? RepeatedField
-          return false unless other.length == length
+          return false if type != other.send(:type) or descriptor != other.send(:descriptor) or length != other.length
           each_msg_val_with_index do |msg_val, i|
             other_msg_val = Google::Protobuf::FFI.get_msgval_at(other.send(:array), i)
             unless Google::Protobuf::FFI.message_value_equal(msg_val, other_msg_val, type, descriptor)
