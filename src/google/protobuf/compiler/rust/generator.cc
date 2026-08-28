@@ -18,6 +18,7 @@
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/ascii.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
@@ -112,6 +113,65 @@ void EmitPublicImports(const RustGeneratorContext& rust_generator_context,
   }
 }
 
+// Checks whether any two files in the crate export symbols that would collide
+// at the crate root when re-exported via `pub use <file_mod>::*;`.
+//
+// Return true if there is at least one collision in this crate.
+bool CrateHasSymbolCollision(const std::vector<const FileDescriptor*>& files) {
+  absl::flat_hash_map<std::string, std::string> type_to_mod;
+  absl::flat_hash_map<std::string, std::string> value_to_mod;
+
+  // Returns true if symbol was already claimed by a different file mod.
+  auto collides =
+      [&](absl::flat_hash_map<std::string, std::string>& symbol_to_mod,
+          const std::string& symbol, const std::string& owner_mod) {
+        auto [it, inserted] = symbol_to_mod.emplace(symbol, owner_mod);
+        return !inserted && it->second != owner_mod;
+      };
+
+  for (const FileDescriptor* file : files) {
+    std::string mod = RustModuleName(*file);
+
+    for (int i = 0; i < file->message_type_count(); ++i) {
+      const Descriptor* msg = file->message_type(i);
+      std::string name = MessageRsName(*msg);
+      // A top-level message is emitted as 'Msg, MsgView, MsgMut'
+      if (collides(type_to_mod, name, mod) ||
+          collides(type_to_mod, absl::StrCat(name, "View"), mod) ||
+          collides(type_to_mod, absl::StrCat(name, "Mut"), mod)) {
+        return true;
+      }
+
+      // A submodule is emitted if the message has nested messages, enums,
+      // extensions, or oneofs.
+      if (msg->nested_type_count() > 0 || msg->enum_type_count() > 0 ||
+          msg->extension_count() > 0 || msg->real_oneof_decl_count() > 0) {
+        if (collides(type_to_mod, RsSafeName(CamelToSnakeCase(msg->name())),
+                     mod)) {
+          return true;
+        }
+      }
+    }
+
+    // Enums
+    for (int i = 0; i < file->enum_type_count(); ++i) {
+      if (collides(type_to_mod, EnumRsName(*file->enum_type(i)), mod)) {
+        return true;
+      }
+    }
+
+    // Extensions are emitted as `pub const <ext>`.
+    for (int i = 0; i < file->extension_count(); ++i) {
+      if (collides(value_to_mod,
+                   absl::AsciiStrToUpper(file->extension(i)->name()), mod)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 void EmitEntryPointRsFile(GeneratorContext* generator_context,
                           Context& ctx_without_printer,
                           const std::vector<const FileDescriptor*>& files) {
@@ -125,31 +185,44 @@ void EmitEntryPointRsFile(GeneratorContext* generator_context,
   io::Printer printer(outfile.get());
   Context ctx = ctx_without_printer.WithPrinter(&printer);
 
-  // Declare the submodules for all of the the generated code and pub re-export
-  // all of them into a flat namespace.
+  // Declare the submodules for all of the generated code and, where safe,
+  // pub re-export all of them into a flat namespace.
   RelativePath primary_relpath(entry_point_rs_file_path);
+  const bool has_collision = CrateHasSymbolCollision(files);
+
   for (const FileDescriptor* file : files) {
     std::string non_primary_file_path = GetRsFile(ctx, *file);
     std::string relative_mod_path =
         primary_relpath.Relative(RelativePath(non_primary_file_path));
+    std::string mod_name = RustModuleName(*file);
+
     // Expose each generated .proto file as a public module named after its
     // (flattened) file path, providing a fully-qualified path to every type
     // (e.g. `my_crate::google_network_api_proto::Config`). See
     // RustModuleName for how the module name is derived from the path.
     //
-    // The flat `pub use` re-export into the crate root is also emitted so that
-    // existing consumers relying on the crate-root namespace continue to work.
-    ctx.Emit(
-        {{"file_path", relative_mod_path}, {"mod_name", RustModuleName(*file)}},
-        R"rs(
+    // The flat `pub use` re-export into the crate root is conditionally emitted
+    ctx.Emit({{"file_path", relative_mod_path}, {"mod_name", mod_name}},
+             R"rs(
               #[path="$file_path$"]
               #[allow(nonstandard_style, unused)]
               pub mod $mod_name$;
-
-              #[allow(nonstandard_style, unused)]
-              #[doc(inline)]
-              pub use $mod_name$::*;
             )rs");
+
+    if (!has_collision) {
+      ctx.Emit({{"mod_name", mod_name}},
+               R"rs(
+                #[allow(nonstandard_style, unused)]
+                #[doc(inline)]
+                pub use $mod_name$::*;
+              )rs");
+    } else {
+      ctx.Emit(R"rs(
+              // Crate-root re-exports (`pub use <mod>::*`) are disabled because
+              // this crate contains symbol name collisions across file modules.
+              // Use fully-qualified paths, e.g. `<crate>::<module>::YourType`.
+            )rs");
+    }
   }
 
   auto v = ctx.printer().WithVars({
