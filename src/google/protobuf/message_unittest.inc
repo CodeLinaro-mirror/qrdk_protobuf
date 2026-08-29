@@ -1186,6 +1186,29 @@ TEST(MESSAGE_TEST_NAME, CordFieldGetsProperlyRegisteredInTheArena) {
   // We expect memory leaks here if the Cord was not properly destroyed.
 }
 
+TEST(MESSAGE_TEST_NAME,
+     StringFieldGetsProperlyRegisteredInTheArena_b552593973) {
+  const std::string long_string(1000, 'x');
+  {
+    Arena arena;
+    auto* msg = Arena::Create<UNITTEST::TestAllTypes>(&arena);
+    msg->set_optional_string(long_string);
+  }
+  {
+    Arena arena;
+    auto* msg = Arena::Create<UNITTEST::NestedTestAllTypes>(&arena);
+    msg->mutable_payload()->set_optional_string(long_string);
+  }
+  {
+    Arena arena;
+    UNITTEST::TestAllTypes src;
+    src.set_optional_string(long_string);
+    std::string serialized = src.SerializeAsString();
+    auto* msg = Arena::Create<UNITTEST::TestAllTypes>(&arena);
+    ASSERT_TRUE(msg->ParseFromString(serialized));
+  }
+}
+
 #if GTEST_HAS_DEATH_TEST  // death tests do not work on Windows yet.
 
 TEST(MESSAGE_TEST_NAME, SerializeFailsIfNotInitialized) {

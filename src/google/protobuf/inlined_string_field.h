@@ -270,6 +270,9 @@ inline InlinedStringField::InlinedStringField([[maybe_unused]] Arena* arena,
                                               const InlinedStringField& rhs) {
   const std::string& src = *rhs.get_const();
   ::new (static_cast<void*>(&str_)) std::string(src);
+  if (arena != nullptr) {
+    MaybeRegisterForDestruction(arena, get_mutable());
+  }
 }
 
 inline const std::string& InlinedStringField::GetNoArena() const {
@@ -311,13 +314,18 @@ PROTOBUF_NDEBUG_INLINE void InlinedStringField::InternalSwap(
     if (rhs_donated) rhs->RegisterForDestruction(arena, rhs->get_mutable());
   }
 #else
-  (void)arena;
   lhs->get_mutable()->swap(*rhs->get_mutable());
+  if (arena != nullptr) {
+    MaybeRegisterForDestruction(arena, lhs->get_mutable());
+    MaybeRegisterForDestruction(arena, rhs->get_mutable());
+  }
 #endif
 }
 
 inline void InlinedStringField::Set(absl::string_view value, Arena* arena) {
-  (void)arena;
+  if (arena != nullptr) {
+    MaybeRegisterForDestruction(arena, get_mutable());
+  }
   SetNoArena(value);
 }
 
