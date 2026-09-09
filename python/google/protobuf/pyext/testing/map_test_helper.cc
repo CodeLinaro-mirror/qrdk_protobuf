@@ -14,6 +14,9 @@
 #include "google/protobuf/message.h"
 #include "google/protobuf/proto_api.h"
 
+// Must be included last.
+#include "google/protobuf/port_def.inc"
+
 namespace google {
 namespace protobuf {
 namespace python {
@@ -67,8 +70,10 @@ PyObject* TestSumAllInt32FieldsUsingRepeatedFields(PyObject* m,
     return nullptr;
   }
 
+  PROTOBUF_IGNORE_DEPRECATION_START
   const google::protobuf::Message* current_msg =
       GetProtoApi()->GetMessagePointer(py_message);
+  PROTOBUF_IGNORE_DEPRECATION_STOP
   if (current_msg == nullptr) {
     if (!PyErr_Occurred()) {
       PyErr_SetString(PyExc_ValueError, "Message has been released or is null");
@@ -109,3 +114,5 @@ PyMODINIT_FUNC PyInit__map_test_helper() {
 }  // namespace python
 }  // namespace protobuf
 }  // namespace google
+
+#include "google/protobuf/port_undef.inc"

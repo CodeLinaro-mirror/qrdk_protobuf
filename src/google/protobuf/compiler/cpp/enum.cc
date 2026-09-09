@@ -182,13 +182,18 @@ void EnumGenerator::GenerateDefinition(io::Printer* p) {
           $values$,
           $open_enum_sentinels$,
         };
-
-        $dllexport_decl $extern const uint32_t $Msg_Enum$_internal_data_[];
-        inline constexpr $Msg_Enum$ $Msg_Enum_Enum_MIN$ =
-            static_cast<$Msg_Enum$>($kMin$);
-        inline constexpr $Msg_Enum$ $Msg_Enum_Enum_MAX$ =
-            static_cast<$Msg_Enum$>($kMax$);
       )cc");
+  p->Emit("\n");
+  if (enum_->options().deprecated()) {
+    p->Emit("PROTOBUF_IGNORE_DEPRECATION_START\n");
+  }
+  p->Emit(R"cc(
+    $dllexport_decl $extern const uint32_t $Msg_Enum$_internal_data_[];
+    inline constexpr $Msg_Enum$ $Msg_Enum_Enum_MIN$ =
+        static_cast<$Msg_Enum$>($kMin$);
+    inline constexpr $Msg_Enum$ $Msg_Enum_Enum_MAX$ =
+        static_cast<$Msg_Enum$>($kMax$);
+  )cc");
 
   // Generate the inline `_IsValid` function choosing the best implementation
   // for the values.
@@ -281,11 +286,17 @@ void EnumGenerator::GenerateDefinition(io::Printer* p) {
           ::absl::string_view name, $Msg_Enum$* $nonnull$ value);
     )cc");
   }
+  if (enum_->options().deprecated()) {
+    p->Emit("PROTOBUF_IGNORE_DEPRECATION_STOP\n");
+  }
 }
 
 void EnumGenerator::GenerateGetEnumDescriptorSpecializations(io::Printer* p) {
   auto v = p->WithVars(EnumVars(enum_, options_, limits_.min, limits_.max));
 
+  if (enum_->options().deprecated()) {
+    p->Emit("PROTOBUF_IGNORE_DEPRECATION_START\n");
+  }
   p->Emit(R"cc(
     template <>
     struct is_proto_enum<$::Msg_Enum$> : std::true_type {};
@@ -306,6 +317,9 @@ void EnumGenerator::GenerateGetEnumDescriptorSpecializations(io::Printer* p) {
         static constexpr auto kNameFunc = $::Msg_Enum$_Name<int>;
       };
     )cc");
+  }
+  if (enum_->options().deprecated()) {
+    p->Emit("PROTOBUF_IGNORE_DEPRECATION_STOP\n");
   }
 }
 
