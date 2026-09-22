@@ -260,7 +260,9 @@ TextFormat::ParseLocationRange TextFormat::ParseInfoTree::GetLocationRange(
 
 TextFormat::ParseLocation TextFormat::ParseInfoTree::GetLocation(
     const FieldDescriptor* field, int index) const {
+  PROTOBUF_IGNORE_DEPRECATION_START
   return GetLocationRange(field, index).start;
+  PROTOBUF_IGNORE_DEPRECATION_STOP
 }
 
 absl::StatusOr<TextFormat::FieldLocation>
@@ -1064,6 +1066,9 @@ class TextFormat::Parser::ParserImpl {
           DO(ConsumeIdentifier(&value));
           // Find the enumeration value.
           enum_value = enum_type->FindValueByName(value);
+          if (enum_value != nullptr) {
+            int_value = enum_value->number();
+          }
 
         } else if (LookingAt("-") ||
                    LookingAtType(io::Tokenizer::TYPE_INTEGER)) {
@@ -1079,7 +1084,7 @@ class TextFormat::Parser::ParserImpl {
         if (enum_value == nullptr) {
           if (int_value != kint64max &&
               !field->legacy_enum_field_treated_as_closed()) {
-            SET_FIELD(EnumValue, int64, int_value);
+            SET_FIELD(EnumValue, enum()->number, int_value);
             return true;
           } else if (!allow_unknown_enum_) {
             ReportError(absl::StrCat("Unknown enumeration value of \"", value,
@@ -1092,8 +1097,9 @@ class TextFormat::Parser::ParserImpl {
             return true;
           }
         }
-
-        SET_FIELD(Enum, enum, enum_value);
+        PROTOBUF_IGNORE_DEPRECATION_START
+        SET_FIELD(EnumValue, enum()->number, int_value);
+        PROTOBUF_IGNORE_DEPRECATION_STOP
         break;
       }
 

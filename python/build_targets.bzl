@@ -173,6 +173,7 @@ def build_targets(name):
         deps = [
             ":proto_api",
             "//src/google/protobuf",
+            "//src/google/protobuf:port",
             "@rules_python//python/cc:current_py_cc_headers",
         ],
         linkshared = 1,
