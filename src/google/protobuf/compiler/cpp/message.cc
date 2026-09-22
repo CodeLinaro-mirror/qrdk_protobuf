@@ -1351,8 +1351,8 @@ void MessageGenerator::GenerateFieldAccessorDefinitions(io::Printer* p) {
     auto t = p->WithVars(MakeTrackerCalls(field, options_));
     if (field->is_repeated()) {
       p->Emit(R"cc(
-        PROTOBUF_ALWAYS_INLINE_NODEBUG int
-        $Msg$::_internal_$name_internal$_size() const {
+        PROTOBUF_ALWAYS_INLINE int $Msg$::_internal_$name_internal$_size()
+            const {
           return _internal_$name_internal$().size();
         }
         inline int $Msg$::$name$_size() const {
@@ -1785,10 +1785,7 @@ void MessageGenerator::GenerateClassDefinition(io::Printer* p) {
           }
 
           p->Emit(R"cc(
-            $nodiscard$
-                PROTOBUF_ALWAYS_INLINE_NODEBUG static const $pb$::Descriptor*
-                    $nonnull$
-                    descriptor() {
+            $nodiscard$ static const $pb$::Descriptor* $nonnull$ descriptor() {
               return GetDescriptor();
             }
           )cc");
@@ -1871,9 +1868,7 @@ void MessageGenerator::GenerateClassDefinition(io::Printer* p) {
                 using Super_::CopyFrom;
                 void CopyFrom(const $Msg$& from);
                 using Super_::MergeFrom;
-                PROTOBUF_ALWAYS_INLINE_NODEBUG void MergeFrom(const $Msg$& from) {
-                  $Msg$::MergeImpl(*this, from);
-                }
+                void MergeFrom(const $Msg$& from) { $Msg$::MergeImpl(*this, from); }
 
                 private:
                 static void MergeImpl($pb$::MessageLite& to_msg,
@@ -1884,13 +1879,9 @@ void MessageGenerator::GenerateClassDefinition(io::Printer* p) {
             } else {
               p->Emit(R"cc(
                 using Super_::CopyFrom;
-                PROTOBUF_ALWAYS_INLINE_NODEBUG void CopyFrom(const $Msg$& from) {
-                  Super_::CopyImpl(*this, from);
-                }
+                void CopyFrom(const $Msg$& from) { Super_::CopyImpl(*this, from); }
                 using Super_::MergeFrom;
-                PROTOBUF_ALWAYS_INLINE_NODEBUG void MergeFrom(const $Msg$& from) {
-                  Super_::MergeImpl(*this, from);
-                }
+                void MergeFrom(const $Msg$& from) { Super_::MergeImpl(*this, from); }
 
                 public:
               )cc");
@@ -1898,9 +1889,7 @@ void MessageGenerator::GenerateClassDefinition(io::Printer* p) {
           } else {
             p->Emit(R"cc(
               void CopyFrom(const $Msg$& from);
-              PROTOBUF_ALWAYS_INLINE_NODEBUG void MergeFrom(const $Msg$& from) {
-                $Msg$::MergeImpl(*this, from);
-              }
+              void MergeFrom(const $Msg$& from) { $Msg$::MergeImpl(*this, from); }
 
               private:
               static void MergeImpl($pb$::MessageLite& to_msg,
@@ -1912,8 +1901,7 @@ void MessageGenerator::GenerateClassDefinition(io::Printer* p) {
 
           if (NeedsIsInitialized()) {
             p->Emit(R"cc(
-              $nodiscard $PROTOBUF_ALWAYS_INLINE_NODEBUG bool IsInitialized()
-                  const {
+              $nodiscard $bool IsInitialized() const {
                 $WeakDescriptorSelfPin$;
                 return IsInitializedImpl(*this);
               }
@@ -1925,8 +1913,7 @@ void MessageGenerator::GenerateClassDefinition(io::Printer* p) {
             )cc");
           } else {
             p->Emit(R"cc(
-              $nodiscard $PROTOBUF_ALWAYS_INLINE_NODEBUG bool IsInitialized()
-                  const {
+              $nodiscard $bool IsInitialized() const {
                 $WeakDescriptorSelfPin$;
                 return true;
               }
@@ -1942,18 +1929,25 @@ void MessageGenerator::GenerateClassDefinition(io::Printer* p) {
             // binary in both modes.
             p->Emit(R"cc(
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-              ABSL_ATTRIBUTE_REINITIALIZES PROTOBUF_ALWAYS_INLINE_NODEBUG void
-              Clear() {
-                Helpers_::Clear(*this);
+              private:
+              static void Clear($pb$::MessageLite& msg);
+              $nodiscard $static::size_t ByteSizeLong(const $pb$::MessageLite& msg);
+              $nodiscard $static $uint8$* $nonnull$ _InternalSerialize(
+                  const $pb$::MessageLite& msg, $uint8$* $nonnull$ target,
+                  $pb$::io::EpsCopyOutputStream* $nonnull$ stream);
+
+              public:
+              ABSL_ATTRIBUTE_REINITIALIZES PROTOBUF_ALWAYS_INLINE void Clear() {
+                Clear(*this);
               }
-              PROTOBUF_ALWAYS_INLINE_NODEBUG $nodiscard $::size_t ByteSizeLong() const {
-                return Helpers_::ByteSizeLong(*this);
+              PROTOBUF_ALWAYS_INLINE $nodiscard $::size_t ByteSizeLong() const {
+                return ByteSizeLong(*this);
               }
-              PROTOBUF_ALWAYS_INLINE_NODEBUG $nodiscard $$uint8$* $nonnull$
+              PROTOBUF_ALWAYS_INLINE $nodiscard $$uint8$* $nonnull$
               _InternalSerialize($uint8$* $nonnull$ target,
                                  $pb$::io::EpsCopyOutputStream* $nonnull$
                                      stream) const {
-                return Helpers_::_InternalSerialize(*this, target, stream);
+                return _InternalSerialize(*this, target, stream);
               }
 #else   // PROTOBUF_CUSTOM_VTABLE
               ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
@@ -1980,8 +1974,7 @@ void MessageGenerator::GenerateClassDefinition(io::Printer* p) {
           if (HasSimpleBaseClass(descriptor_, options_)) return;
           p->Emit(
               R"cc(
-                $nodiscard $PROTOBUF_ALWAYS_INLINE_NODEBUG int GetCachedSize()
-                    const {
+                $nodiscard $int GetCachedSize() const {
                   return $cached_size$.Get();
                 }
 
@@ -2129,8 +2122,7 @@ void MessageGenerator::GenerateClassDefinition(io::Printer* p) {
 #if defined(PROTOBUF_CUSTOM_VTABLE)
           //~ Define a derived `operator delete` to avoid dynamic dispatch when
           //~ the type is statically known
-          PROTOBUF_ALWAYS_INLINE_NODEBUG void operator delete(
-              $Msg$* $nonnull$ msg, ::std::destroying_delete_t) {
+          void operator delete($Msg$* $nonnull$ msg, ::std::destroying_delete_t) {
             SharedDtor(*msg);
             $pbi$::SizedDelete(msg, sizeof($Msg$));
           }
@@ -2143,11 +2135,9 @@ void MessageGenerator::GenerateClassDefinition(io::Printer* p) {
                                    const $pbi$::ClassData* $nonnull$
                                        class_data);
 
-          PROTOBUF_ALWAYS_INLINE_NODEBUG $Msg$(const $Msg$& from)
-              : $Msg$(nullptr, from) {}
-          PROTOBUF_ALWAYS_INLINE_NODEBUG $Msg$($Msg$&& from) noexcept
-              : $Msg$(nullptr, ::std::move(from)) {}
-          PROTOBUF_ALWAYS_INLINE_NODEBUG $Msg$& operator=(const $Msg$& from) {
+          inline $Msg$(const $Msg$& from) : $Msg$(nullptr, from) {}
+          inline $Msg$($Msg$&& from) noexcept : $Msg$(nullptr, ::std::move(from)) {}
+          inline $Msg$& operator=(const $Msg$& from) {
             CopyFrom(from);
             return *this;
           }
@@ -2198,7 +2188,7 @@ void MessageGenerator::GenerateClassDefinition(io::Printer* p) {
 
           // implements Message ----------------------------------------------
 
-          $nodiscard $PROTOBUF_ALWAYS_INLINE_NODEBUG $Msg$* $nonnull$
+          $nodiscard $$Msg$* $nonnull$
           New($pb$::Arena* $nullable$ arena = nullptr) const {
             return Super_::DefaultConstruct<$Msg$>(arena);
           }
@@ -2241,20 +2231,6 @@ void MessageGenerator::GenerateClassDefinition(io::Printer* p) {
           //~ Generate private members.
          private:
           class _Internal;
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-          struct Helpers_ {
-            //~ Declare a single constructor out of line to enable constructor
-            //~ homing. We don't define this constructor, since it is not
-            //~ called. See go/constructor-homing.
-            PROTOBUF_NODEBUG Helpers_();
-
-            static void Clear($pb$::MessageLite& msg);
-            $nodiscard $static::size_t ByteSizeLong(const $pb$::MessageLite& msg);
-            $nodiscard $static $uint8$* $nonnull$ _InternalSerialize(
-                const $pb$::MessageLite& msg, $uint8$* $nonnull$ target,
-                $pb$::io::EpsCopyOutputStream* $nonnull$ stream);
-          };
-#endif  // PROTOBUF_CUSTOM_VTABLE
           $decl_set_has$;
           $decl_oneof_has$;
           $alias_parse_table_type$;
@@ -2338,10 +2314,8 @@ void MessageGenerator::GenerateClassMethods(io::Printer* p) {
              {"class_data", [&] { GenerateClassData(p); }}},
             R"cc(
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-              PROTOBUF_ALWAYS_INLINE_NODEBUG $Msg$::$Msg$()
-                  : Super_(&$globals$.class_data) {}
-              PROTOBUF_ALWAYS_INLINE_NODEBUG $Msg$::$Msg$(
-                  $pb$::Arena* $nullable$ arena)
+              $Msg$::$Msg$() : Super_(&$globals$.class_data) {}
+              $Msg$::$Msg$($pb$::Arena* $nullable$ arena)
                   : Super_(arena, &$globals$.class_data) {}
 #else   // PROTOBUF_CUSTOM_VTABLE
               $Msg$::$Msg$() : Super_() {}
@@ -2939,9 +2913,8 @@ void MessageGenerator::GenerateConstexprConstructor(io::Printer* p) {
       //~ Templatize constexpr constructor as a workaround for a bug in
       //~ gcc 12 (warning in gcc 13).
       template <typename>
-      PROTOBUF_ALWAYS_INLINE_NODEBUG constexpr $Msg$::$Msg$(
-          ::_pbi::ConstantInitialized,
-          const ::_pbi::ClassData* $nonnull$ class_data)
+      constexpr $Msg$::$Msg$(::_pbi::ConstantInitialized,
+                             const ::_pbi::ClassData* $nonnull$ class_data)
           : Super_(
 #if defined(PROTOBUF_CUSTOM_VTABLE)
                 class_data
@@ -2969,9 +2942,8 @@ void MessageGenerator::GenerateConstexprConstructor(io::Printer* p) {
   p->Emit(
       R"cc(
         template <typename>
-        PROTOBUF_ALWAYS_INLINE_NODEBUG constexpr $Msg$::$Msg$(
-            ::_pbi::ConstantInitialized,
-            const ::_pbi::ClassData* $nonnull$ class_data)
+        constexpr $Msg$::$Msg$(::_pbi::ConstantInitialized,
+                               const ::_pbi::ClassData* $nonnull$ class_data)
             : Super_(
 #if defined(PROTOBUF_CUSTOM_VTABLE)
                   class_data
@@ -3551,7 +3523,7 @@ void MessageGenerator::GenerateClear(io::Printer* p) {
       },
       R"cc(
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-        PROTOBUF_NOINLINE void $Msg$::Helpers_::Clear(MessageLite& base) {
+        PROTOBUF_NOINLINE void $Msg$::Clear(MessageLite& base) {
           $Msg$& this_ = static_cast<$Msg$&>(base);
 #else   // PROTOBUF_CUSTOM_VTABLE
         PROTOBUF_NOINLINE void $Msg$::Clear() {
@@ -3820,8 +3792,7 @@ void MessageGenerator::GenerateInternalGenerateClassData(io::Printer* p) {
         )cc");
       } else {
         p->Emit(R"cc(
-          &Helpers_::Clear, &Helpers_::ByteSizeLong,
-              &Helpers_::_InternalSerialize,
+          &Clear, &ByteSizeLong, &_InternalSerialize,
         )cc");
       }
     } else {
@@ -4445,7 +4416,7 @@ void MessageGenerator::GenerateSerializeWithCachedSizesToArray(io::Printer* p) {
     // Special-case MessageSet.
     p->Emit(R"cc(
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-      $uint8$* $nonnull$ $Msg$::Helpers_::_InternalSerialize(
+      $uint8$* $nonnull$ $Msg$::_InternalSerialize(
           const $pb$::MessageLite& base, $uint8$* $nonnull$ target,
           $pb$::io::EpsCopyOutputStream* $nonnull$ stream) {
         const $Msg$& this_ = static_cast<const $Msg$&>(base);
@@ -4490,7 +4461,7 @@ void MessageGenerator::GenerateSerializeWithCachedSizesToArray(io::Printer* p) {
       },
       R"cc(
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-        $uint8$* $nonnull$ $Msg$::Helpers_::_InternalSerialize(
+        $uint8$* $nonnull$ $Msg$::_InternalSerialize(
             const $pb$::MessageLite& base, $uint8$* $nonnull$ target,
             $pb$::io::EpsCopyOutputStream* $nonnull$ stream) {
           const $Msg$& this_ = static_cast<const $Msg$&>(base);
@@ -5038,7 +5009,7 @@ void MessageGenerator::GenerateByteSize(io::Printer* p) {
     p->Emit(
         R"cc(
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-          ::size_t $Msg$::Helpers_::ByteSizeLong(const MessageLite& base) {
+          ::size_t $Msg$::ByteSizeLong(const MessageLite& base) {
             const $Msg$& this_ = static_cast<const $Msg$&>(base);
 #else   // PROTOBUF_CUSTOM_VTABLE
           ::size_t $Msg$::ByteSizeLong() const {
@@ -5175,7 +5146,7 @@ void MessageGenerator::GenerateByteSize(io::Printer* p) {
         }}},
       R"cc(
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-        ::size_t $Msg$::Helpers_::ByteSizeLong(const MessageLite& base) {
+        ::size_t $Msg$::ByteSizeLong(const MessageLite& base) {
           const $Msg$& this_ = static_cast<const $Msg$&>(base);
 #else   // PROTOBUF_CUSTOM_VTABLE
         ::size_t $Msg$::ByteSizeLong() const {

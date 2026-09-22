@@ -78,8 +78,7 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CSharpFeatures final 
   ~CSharpFeatures() PROTOBUF_FINAL;
 
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-  PROTOBUF_ALWAYS_INLINE_NODEBUG void operator delete(
-      CSharpFeatures* PROTOBUF_NONNULL msg, ::std::destroying_delete_t) {
+  void operator delete(CSharpFeatures* PROTOBUF_NONNULL msg, ::std::destroying_delete_t) {
     SharedDtor(*msg);
     ::google::protobuf::internal::SizedDelete(msg, sizeof(CSharpFeatures));
   }
@@ -90,11 +89,9 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CSharpFeatures final 
                            const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL
                                class_data);
 
-  PROTOBUF_ALWAYS_INLINE_NODEBUG CSharpFeatures(const CSharpFeatures& from)
-      : CSharpFeatures(nullptr, from) {}
-  PROTOBUF_ALWAYS_INLINE_NODEBUG CSharpFeatures(CSharpFeatures&& from) noexcept
-      : CSharpFeatures(nullptr, ::std::move(from)) {}
-  PROTOBUF_ALWAYS_INLINE_NODEBUG CSharpFeatures& operator=(const CSharpFeatures& from) {
+  inline CSharpFeatures(const CSharpFeatures& from) : CSharpFeatures(nullptr, from) {}
+  inline CSharpFeatures(CSharpFeatures&& from) noexcept : CSharpFeatures(nullptr, ::std::move(from)) {}
+  inline CSharpFeatures& operator=(const CSharpFeatures& from) {
     CopyFrom(from);
     return *this;
   }
@@ -117,10 +114,7 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CSharpFeatures final 
     return _internal_metadata_.mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
   }
 
-  [[nodiscard]]
-      PROTOBUF_ALWAYS_INLINE_NODEBUG static const ::google::protobuf::Descriptor*
-          PROTOBUF_NONNULL
-          descriptor() {
+  [[nodiscard]] static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL descriptor() {
     return GetDescriptor();
   }
   [[nodiscard]] static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL
@@ -151,39 +145,43 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CSharpFeatures final 
 
   // implements Message ----------------------------------------------
 
-  [[nodiscard]] PROTOBUF_ALWAYS_INLINE_NODEBUG CSharpFeatures* PROTOBUF_NONNULL
+  [[nodiscard]] CSharpFeatures* PROTOBUF_NONNULL
   New(::google::protobuf::Arena* PROTOBUF_NULLABLE arena = nullptr) const {
     return Super_::DefaultConstruct<CSharpFeatures>(arena);
   }
   using Super_::CopyFrom;
   void CopyFrom(const CSharpFeatures& from);
   using Super_::MergeFrom;
-  PROTOBUF_ALWAYS_INLINE_NODEBUG void MergeFrom(const CSharpFeatures& from) {
-    CSharpFeatures::MergeImpl(*this, from);
-  }
+  void MergeFrom(const CSharpFeatures& from) { CSharpFeatures::MergeImpl(*this, from); }
 
   private:
   static void MergeImpl(::google::protobuf::MessageLite& to_msg,
                         const ::google::protobuf::MessageLite& from_msg);
 
   public:
-  [[nodiscard]] PROTOBUF_ALWAYS_INLINE_NODEBUG bool IsInitialized()
-      const {
+  [[nodiscard]] bool IsInitialized() const {
     return true;
   }
   #if defined(PROTOBUF_CUSTOM_VTABLE)
-  ABSL_ATTRIBUTE_REINITIALIZES PROTOBUF_ALWAYS_INLINE_NODEBUG void
-  Clear() {
-    Helpers_::Clear(*this);
+  private:
+  static void Clear(::google::protobuf::MessageLite& msg);
+  [[nodiscard]] static::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
+  [[nodiscard]] static ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
+      const ::google::protobuf::MessageLite& msg, ::uint8_t* PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream);
+
+  public:
+  ABSL_ATTRIBUTE_REINITIALIZES PROTOBUF_ALWAYS_INLINE void Clear() {
+    Clear(*this);
   }
-  PROTOBUF_ALWAYS_INLINE_NODEBUG [[nodiscard]] ::size_t ByteSizeLong() const {
-    return Helpers_::ByteSizeLong(*this);
+  PROTOBUF_ALWAYS_INLINE [[nodiscard]] ::size_t ByteSizeLong() const {
+    return ByteSizeLong(*this);
   }
-  PROTOBUF_ALWAYS_INLINE_NODEBUG [[nodiscard]] ::uint8_t* PROTOBUF_NONNULL
+  PROTOBUF_ALWAYS_INLINE [[nodiscard]] ::uint8_t* PROTOBUF_NONNULL
   _InternalSerialize(::uint8_t* PROTOBUF_NONNULL target,
                      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL
                          stream) const {
-    return Helpers_::_InternalSerialize(*this, target, stream);
+    return _InternalSerialize(*this, target, stream);
   }
   #else   // PROTOBUF_CUSTOM_VTABLE
   ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
@@ -192,8 +190,7 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CSharpFeatures final 
       ::uint8_t* PROTOBUF_NONNULL target,
       ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const final;
   #endif  // PROTOBUF_CUSTOM_VTABLE
-  [[nodiscard]] PROTOBUF_ALWAYS_INLINE_NODEBUG int GetCachedSize()
-      const {
+  [[nodiscard]] int GetCachedSize() const {
     return _impl_._cached_size_.Get();
   }
 
@@ -237,17 +234,6 @@ class PROTOC_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CSharpFeatures final 
   // @@protoc_insertion_point(class_scope:pb.CSharpFeatures)
  private:
   class _Internal;
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-  struct Helpers_ {
-    PROTOBUF_NODEBUG Helpers_();
-
-    static void Clear(::google::protobuf::MessageLite& msg);
-    [[nodiscard]] static::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
-    [[nodiscard]] static ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
-        const ::google::protobuf::MessageLite& msg, ::uint8_t* PROTOBUF_NONNULL target,
-        ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream);
-  };
-#endif  // PROTOBUF_CUSTOM_VTABLE
   using ParseTableT_ =
       ::google::protobuf::internal::TcParseTable<0, 1,
                           0, 0,
