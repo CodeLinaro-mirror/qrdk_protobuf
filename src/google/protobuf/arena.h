@@ -571,28 +571,15 @@ class PROTOBUF_EXPORT PROTOBUF_ALIGNAS(8)
     // protobuf container types like RepeatedPtrField and Map. It is internal to
     // protobuf and is not guaranteed to be stable. Non-proto types should not
     // rely on this protocol.
-    template <typename U>
-    static char DestructorSkippable(
-        const typename U::DestructorSkippable_* PROTOBUF_NULLABLE);
-    template <typename U>
-    static double DestructorSkippable(...);
+    static constexpr bool kIsDestructorSkippable =
+        internal::Requires<T>(
+            [](auto&& t) ->
+            typename std::decay_t<decltype(t)>::DestructorSkippable_ {}) ||
+        std::is_trivially_destructible_v<T>;
 
-    typedef std::integral_constant<
-        bool, sizeof(DestructorSkippable<T>(static_cast<const T*>(nullptr))) ==
-                      sizeof(char) ||
-                  std::is_trivially_destructible<T>::value>
-        is_destructor_skippable;
-
-    template <typename U>
-    static char ArenaConstructable(
-        const typename U::InternalArenaConstructable_* PROTOBUF_NULLABLE);
-    template <typename U>
-    static double ArenaConstructable(...);
-
-    typedef std::integral_constant<bool, sizeof(ArenaConstructable<T>(
-                                             static_cast<const T*>(nullptr))) ==
-                                             sizeof(char)>
-        is_arena_constructable;
+    static constexpr bool kIsArenaConstructable = internal::Requires<T>(
+        [](auto&& t) ->
+        typename std::decay_t<decltype(t)>::InternalArenaConstructable_ {});
 
     // Note that by this point, for types `U` which overload `FieldArenaRep<U>`,
     // `T` is the arena representation `FieldArenaRep<U>::Type` and is expected
@@ -655,10 +642,11 @@ class PROTOBUF_EXPORT PROTOBUF_ALIGNAS(8)
   // This is inside Arena because only Arena has the friend relationships
   // necessary to see the underlying generated code traits.
   template <typename T>
-  struct is_arena_constructable : InternalHelper<T>::is_arena_constructable {};
+  struct is_arena_constructable
+      : std::bool_constant<InternalHelper<T>::kIsArenaConstructable> {};
   template <typename T>
-  struct is_destructor_skippable : InternalHelper<T>::is_destructor_skippable {
-  };
+  struct is_destructor_skippable
+      : std::bool_constant<InternalHelper<T>::kIsDestructorSkippable> {};
 
  private:
   internal::ThreadSafeArena impl_;

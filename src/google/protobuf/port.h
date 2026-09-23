@@ -777,6 +777,13 @@ constexpr bool EnableCustomNewFor() {
 }
 #endif
 
+// C++17 port of the C++20 `requires` expressions, copied from
+// absl::meta_internal.
+template <typename... T, typename F>
+constexpr bool Requires(F) {
+  return std::is_invocable_v<F, T...>;
+}
+
 // Counter library for debugging internal protobuf logic.
 // It allows instrumenting code that has different options (eg fast vs slow
 // path) to get visibility into how much we are hitting each path.
