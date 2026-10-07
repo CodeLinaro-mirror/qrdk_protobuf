@@ -657,6 +657,43 @@ cc_library(
 )
 
 cc_library(
+    name = "protobuf_test",
+    testonly = 1,
+    srcs = ["protobuf_test.cc"],
+    hdrs = ["protobuf_test.h"],
+    strip_include_prefix = "/src",
+    visibility = [
+        "//:__subpackages__",
+        "//src/google/protobuf:__subpackages__",
+    ],
+    deps = [
+        ":port",
+        ":protobuf",
+        "@abseil-cpp//absl/container:btree",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/numeric:int128",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:charset",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:span",
+        "@googletest//:gtest",
+    ],
+)
+
+cc_test(
+    name = "protobuf_test_test",
+    srcs = ["protobuf_test_test.cc"],
+    deps = [
+        ":cc_test_protos",
+        ":protobuf_test",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "micro_string",
     srcs = ["micro_string.cc"],
     hdrs = ["micro_string.h"],
