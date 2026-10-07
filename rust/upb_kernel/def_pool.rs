@@ -6,9 +6,11 @@
 // https://developers.google.com/open-source/licenses/bsd
 
 use super::upb_reflection::{self, DefPool, DefPoolInitPtr, MessageDef};
-use super::{MiniTableEnumPtr, MiniTableExtensionPtr, MiniTablePtr, THREAD_LOCAL_ARENA};
+use super::{
+    MiniTableEnumPtr, MiniTableExtensionPtr, MiniTablePtr, EXTENSION_DEF_INITS, THREAD_LOCAL_ARENA,
+};
 use std::ffi::CStr;
-use std::sync::{Mutex, OnceLock};
+use std::sync::{OnceLock, RwLock, RwLockReadGuard};
 
 #[derive(Clone, Copy)]
 pub struct DefPoolInit(DefPoolInitPtr);
@@ -26,10 +28,36 @@ impl MessageDefCached {
     }
 }
 
-struct GlobalDefPool(DefPool);
+pub(super) struct GlobalDefPool(pub(super) DefPool);
 unsafe impl Send for GlobalDefPool {}
-// There is only one global, singleton DefPool, protected by a Mutex.
-static POOL: OnceLock<Mutex<GlobalDefPool>> = OnceLock::new();
+unsafe impl Sync for GlobalDefPool {}
+// There is only one global, singleton DefPool, protected by a RwLock.
+static POOL: OnceLock<RwLock<GlobalDefPool>> = OnceLock::new();
+
+fn init_global_pool() -> &'static RwLock<GlobalDefPool> {
+    POOL.get_or_init(|| {
+        let mut pool = DefPool::new();
+
+        // Load all extension descriptors in other files besides the one from which reflection is
+        // called into the global DefPool.
+        for def_init in EXTENSION_DEF_INITS {
+            let init = def_init();
+            // SAFETY: `init` was built by generated code for a valid .proto file.
+            let loaded = unsafe { pool.load_def_init(init.0.as_ptr()) };
+            assert!(
+                loaded,
+                "failed to load a generated extension descriptor into the global DefPool"
+            );
+        }
+
+        RwLock::new(GlobalDefPool(pool))
+    })
+}
+
+// Returns a read guard of the global DefPool.
+pub(super) fn global_pool() -> RwLockReadGuard<'static, GlobalDefPool> {
+    init_global_pool().read().expect("global DefPool RwLock should not be poisoned")
+}
 
 /// A message of which a MessageDef and DefPoolInit can be looked up. This trait must be
 /// implemented in Rust gencode for every message that needs reflection support.
@@ -82,10 +110,9 @@ pub fn message_def<T: UpbWithReflection>() -> MessageDef<'static> {
         // Eventually calls `build_def_init` emitted for `T`.
         let init = T::def_init();
 
-        let mut pool = POOL
-            .get_or_init(|| Mutex::new(GlobalDefPool(DefPool::new())))
-            .lock()
-            .expect("global DefPool mutex should not be poisoned");
+        // Keep a write lock on the global DefPool.
+        let mut pool =
+            init_global_pool().write().expect("global DefPool RwLock should not be poisoned");
 
         // Load the descriptor into the global DefPool. If it was already loaded, this would be a
         // no-op.
