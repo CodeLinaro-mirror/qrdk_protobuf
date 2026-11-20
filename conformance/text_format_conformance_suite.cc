@@ -9,17 +9,21 @@
 
 #include <cstddef>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "google/protobuf/descriptor.pb.h"
 #include "absl/log/absl_log.h"
 #include "absl/log/die_if_null.h"
+#include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
 #include "conformance/conformance.pb.h"
 #include "conformance/conformance_test.h"
 #include "conformance/test_protos/test_messages_edition2023.pb.h"
+#include "conformance/test_protos/test_messages_edition2026.pb.h"
 #include "conformance/test_protos/test_messages_edition_unstable.pb.h"
 #include "editions/golden/test_messages_proto2_editions.pb.h"
 #include "editions/golden/test_messages_proto3_editions.pb.h"
@@ -32,6 +36,7 @@ using conformance::ConformanceResponse;
 using conformance::TestStatus;
 using conformance::WireFormat;
 using protobuf_test_messages::editions::TestAllTypesEdition2023;
+using protobuf_test_messages::editions::TestAllTypesEdition2026;
 using protobuf_test_messages::proto2::TestAllTypesProto2;
 using protobuf_test_messages::proto2::UnknownToTestAllTypes;
 using protobuf_test_messages::proto3::TestAllTypesProto3;
@@ -135,6 +140,9 @@ void TextFormatConformanceTestSuite::RunSuiteImpl() {
     TextFormatConformanceTestSuiteImpl<TestAllTypesProto3Editions>(this);
     TextFormatConformanceTestSuiteImpl<TestAllTypesEdition2023>(this);
   }
+  if (maximum_edition_ >= Edition::EDITION_2026) {
+    TextFormatConformanceTestSuiteImpl<TestAllTypesEdition2026>(this);
+  }
 }
 
 template <typename MessageType>
@@ -144,6 +152,10 @@ TextFormatConformanceTestSuiteImpl<MessageType>::
   // Flag control performance tests to keep them internal and opt-in only
   if (suite_.performance_) {
     if (MessageType::GetDescriptor()->name() == "TestAllTypesEdition2023") {
+      // There are no editions-sensitive performance tests.
+      return;
+    }
+    if (MessageType::GetDescriptor()->name() == "TestAllTypesEdition2026") {
       // There are no editions-sensitive performance tests.
       return;
     }
@@ -160,11 +172,19 @@ TextFormatConformanceTestSuiteImpl<MessageType>::
     if (MessageType::GetDescriptor()->name() == "TestAllTypesEdition2023") {
       RunDelimitedTests();
     }
-    if (MessageType::GetDescriptor()->name() == "TestAllTypesProto3") {
-      RunAnyTests();
-      RunOpenEnumTests();
-      // TODO Run these over proto2 also.
-      RunAllTests();
+    if (MessageType::GetDescriptor()->name() == "TestAllTypesEdition2026") {
+      RunEdition2026Tests();
+    }
+    // TestAllTypesEdition2026 only defines a small subset of fields, so avoid
+    // instantiating RunAllTests() (which calls mutable_map_string_string(),
+    // etc.) for it.
+    if constexpr (!std::is_same_v<MessageType, TestAllTypesEdition2026>) {
+      if (MessageType::GetDescriptor()->name() == "TestAllTypesProto3") {
+        RunAnyTests();
+        RunOpenEnumTests();
+        // TODO Run these over proto2 also.
+        RunAllTests();
+      }
     }
   }
 }
@@ -244,6 +264,45 @@ void TextFormatConformanceTestSuiteImpl<MessageType>::
       level, ::conformance::TEXT_FORMAT, ::conformance::TEXT_FORMAT,
       ::conformance::TEXT_FORMAT_TEST, prototype, test_name, input_text);
   suite_.RunValidInputTest(setting2, expected_text);
+}
+
+template <typename MessageType>
+void TextFormatConformanceTestSuiteImpl<MessageType>::
+    RunValidTextFormatTestWithValidator(const std::string& test_name,
+                                        ConformanceLevel level,
+                                        const std::string& input_text,
+                                        const Validator& validator) {
+  MessageType prototype;
+  ConformanceRequestSetting setting1(
+      level, ::conformance::TEXT_FORMAT, ::conformance::PROTOBUF,
+      ::conformance::TEXT_FORMAT_TEST, prototype, test_name, input_text);
+  suite_.RunValidInputTest(setting1, input_text);
+
+  ConformanceRequestSetting setting2(
+      level, ::conformance::TEXT_FORMAT, ::conformance::TEXT_FORMAT,
+      ::conformance::TEXT_FORMAT_TEST, prototype, test_name, input_text);
+  const ConformanceRequest& request = setting2.GetRequest();
+  ConformanceResponse response;
+  if (!suite_.RunTest(setting2.GetTestName(), request, &response)) {
+    return;
+  }
+  if (response.result_case() == ConformanceResponse::kTextPayload &&
+      !validator(response.text_payload())) {
+    TestStatus test;
+    test.set_name(setting2.GetTestName());
+    test.set_failure_message("TEXT_FORMAT payload validation failed.");
+    suite_.ReportFailure(test, level, request, response);
+    return;
+  }
+
+  MessageType reference_message;
+  if (!TextFormat::ParseFromString(input_text, &reference_message)) {
+    ABSL_LOG(FATAL) << "Failed to parse text data for test case: "
+                    << setting2.GetTestName();
+  }
+  suite_.VerifyResponse(setting2, reference_message.SerializeAsString(),
+                        response, /*need_report_success=*/true,
+                        /*require_same_wire_format=*/false);
 }
 
 template <typename MessageType>
@@ -986,6 +1045,70 @@ void TextFormatConformanceTestSuiteImpl<MessageType>::RunClosedEnumTests() {
                      R"(
         optional_nested_enum: 42
         )");
+}
+
+template <typename MessageType>
+void TextFormatConformanceTestSuiteImpl<MessageType>::RunEdition2026Tests() {
+  // Unlike JSON (which emits custom (pb.enumvalue.json) names and accepts both
+  // custom JSON names and declared enum value names when parsing), TextFormat
+  // ignores (pb.enumvalue.json): it must accept and emit only declared enum
+  // value names and reject custom JSON names, catching implementations that
+  // share enum name mappings between JSON and TextFormat.
+  RunValidTextFormatTestWithValidator(
+      "EnumValueWithCustomJsonNameUsesDeclaredName", REQUIRED,
+      "optional_foreign_enum: FOREIGN_ENUM_EDITION2026_BAR",
+      [](absl::string_view output) {
+        return absl::StrContains(output, "FOREIGN_ENUM_EDITION2026_BAR");
+      });
+  RunValidTextFormatTestWithValidator(
+      "EnumValueWithEmptyCustomJsonNameUsesDeclaredName", REQUIRED,
+      "optional_foreign_enum: FOREIGN_ENUM_EDITION2026_EMPTY",
+      [](absl::string_view output) {
+        return absl::StrContains(output, "FOREIGN_ENUM_EDITION2026_EMPTY");
+      });
+  RunValidTextFormatTestWithValidator(
+      "EnumValueAliasWithCustomJsonNameUsesDeclaredName", REQUIRED,
+      "optional_foreign_enum: FOREIGN_ENUM_EDITION2026_ALIAS_TOO",
+      [](absl::string_view output) {
+        return absl::StrContains(output, "FOREIGN_ENUM_EDITION2026_ALIAS") &&
+               !absl::StrContains(output, "FOREIGN_ENUM_EDITION2026_ALIAS_TOO");
+      });
+  RunValidTextFormatTestWithValidator(
+      "RepeatedAndMapEnumValueWithCustomJsonNameUsesDeclaredName", REQUIRED,
+      R"(
+        repeated_foreign_enum: [
+          FOREIGN_ENUM_EDITION2026_BAR,
+          FOREIGN_ENUM_EDITION2026_BAZ
+        ]
+        map_string_foreign_enum {
+          key: "a"
+          value: FOREIGN_ENUM_EDITION2026_NUMERIC
+        }
+      )",
+      [](absl::string_view output) {
+        return absl::StrContains(output, "FOREIGN_ENUM_EDITION2026_BAR") &&
+               absl::StrContains(output, "FOREIGN_ENUM_EDITION2026_BAZ") &&
+               absl::StrContains(output, "FOREIGN_ENUM_EDITION2026_NUMERIC");
+      });
+  RunValidTextFormatTestWithValidator(
+      "EnumValueEmptyJsonOptionUsesDeclaredName", REQUIRED,
+      "optional_foreign_enum: FOREIGN_ENUM_EDITION2026_EMPTY_OPTION",
+      [](absl::string_view output) {
+        return absl::StrContains(output,
+                                 "FOREIGN_ENUM_EDITION2026_EMPTY_OPTION");
+      });
+
+  ExpectParseFailure("EnumValueCustomJsonNameRejected", REQUIRED,
+                     "optional_foreign_enum: customBar");
+  ExpectParseFailure("EnumValueCustomJsonNameStringRejected", REQUIRED,
+                     R"(optional_foreign_enum: "customBar")");
+  ExpectParseFailure("EnumValueAliasCustomJsonNameRejected", REQUIRED,
+                     "optional_foreign_enum: customAlias");
+  ExpectParseFailure("RepeatedEnumValueCustomJsonNameRejected", REQUIRED,
+                     "repeated_foreign_enum: [customBar]");
+  ExpectParseFailure(
+      "MapEnumValueCustomJsonNameRejected", REQUIRED,
+      R"(map_string_foreign_enum { key: "a" value: customBar })");
 }
 
 }  // namespace conformance
